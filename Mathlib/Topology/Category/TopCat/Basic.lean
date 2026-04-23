@@ -5,6 +5,7 @@ Authors: Patrick Massot, Kim Morrison, Mario Carneiro
 -/
 module
 
+public import Mathlib.CategoryTheory.ConcreteCategory.Forget
 public import Mathlib.CategoryTheory.Elementwise
 public import Mathlib.Topology.ContinuousMap.Basic
 
@@ -163,7 +164,7 @@ equal function coercion for a continuous map `C(X, Y)`.
 @[simp] theorem coe_of_of {X Y : Type u} [TopologicalSpace X] [TopologicalSpace Y]
     {f : C(X, Y)} {x} :
     @DFunLike.coe (TopCat.of X ⟶ TopCat.of Y) ((CategoryTheory.forget TopCat).obj (TopCat.of X))
-      (fun _ ↦ (CategoryTheory.forget TopCat).obj (TopCat.of Y)) HasForget.instFunLike
+      (fun _ ↦ (CategoryTheory.forget TopCat).obj (TopCat.of Y)) ConcreteCategory.instFunLike
       (ofHom f) x =
     @DFunLike.coe C(X, Y) X
       (fun _ ↦ Y) _
@@ -260,5 +261,15 @@ def const {X Y : TopCat.{u}} (y : Y) : X ⟶ Y :=
 @[simp]
 lemma const_apply {X Y : TopCat.{u}} (y : Y) (x : X) :
     const y x = y := rfl
+
+section Complement
+
+variable {X A B : TopCat} (f : A ⟶ X) (g : B ⟶ X)
+
+/-- Two morphisms `f : A ⟶ X` and `g : B ⟶ X` in `TopCat` are complements if their images are
+complements in `X`. -/
+protected abbrev IsCompl := _root_.IsCompl (Set.range f) (Set.range g)
+
+end Complement
 
 end TopCat
