@@ -67,8 +67,14 @@ variable {X Y Z : TopPair.{u}}
 /-- The map between the first spaces -/
 abbrev Hom.fst (f : X ⟶ Y) : X.fst ⟶ Y.fst := f.hom.right
 
+@[simp]
+lemma Hom.fst_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.fst (ofHom f g) = f := rfl
+
 /-- The map between the second spaces -/
 abbrev Hom.snd (f : X ⟶ Y) : X.snd ⟶ Y.snd := f.hom.left
+
+@[simp]
+lemma Hom.snd_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.snd (ofHom f g) = g := rfl
 
 @[reassoc, elementwise]
 lemma Hom.w {X Y : TopPair.{u}} (f : X ⟶ Y) :
@@ -82,10 +88,24 @@ projection to the first space. -/
 abbrev proj₁ : TopPair.{u} ⥤ TopCat.{u} :=
   MorphismProperty.Arrow.forget _ _ _ ⋙ CategoryTheory.Arrow.rightFunc
 
+-- simps generates the wrong lemmas
+@[simp]
+lemma proj₁_obj (X : TopPair) : proj₁.obj X = X.fst := rfl
+
+@[simp]
+lemma proj₁_map {X Y : TopPair} (f : X ⟶ Y) : proj₁.map f = Hom.fst f := rfl
+
 /-- The functor from topological pairs to topological spaces that forgets the first space, i.e. the
 projection to the second space. -/
 abbrev proj₂ : TopPair.{u} ⥤ TopCat.{u} :=
   MorphismProperty.Arrow.forget _ _ _ ⋙ CategoryTheory.Arrow.leftFunc
+
+-- simps generates the wrong lemmas
+@[simp]
+lemma proj₂_obj (X : TopPair) : proj₂.obj X = X.snd := rfl
+
+@[simp]
+lemma proj₂_map {X Y : TopPair} (f : X ⟶ Y) : proj₂.map f = Hom.snd f := rfl
 
 /-- The inclusion functor from topological spaces to topological pairs that sends a space X to
 (X, ∅). -/
@@ -205,13 +225,26 @@ namespace Homotopic
 theorem equivalence : Equivalence (Homotopic (X := X) (Y := Y)) :=
   ⟨fun f ↦ ⟨Homotopy.refl f⟩, fun h ↦ h.map Homotopy.symm, fun h₀ h₁ ↦ h₀.map2 Homotopy.trans h₁⟩
 
+abbrev homRel : HomRel TopPair := fun _ _ ↦ Homotopic
+
+instance : HomRel.IsStableUnderPrecomp homRel := ⟨fun _ _ _ h ↦ ⟨.comp h.some (.refl _)⟩⟩
+
+instance : HomRel.IsStableUnderPostcomp homRel := ⟨fun _ h ↦ ⟨.comp (.refl _) h.some⟩⟩
+
+abbrev TopPairHomotopyCat := CategoryTheory.Quotient homRel
+
+abbrev HomotopyEquiv (X Y : TopPair) :=
+  Iso (C := TopPairHomotopyCat) ((Quotient.functor _).obj X) ((Quotient.functor _).obj Y)
+
+@[inherit_doc] scoped infixl:25 " ≃ₕ " => HomotopyEquiv
+
 end Homotopic
 
 section Embedding
 
 /-- A morphism `f : X ⟶ Y` in `TopPair` is an embedding if its first and second component are
 embeddings. -/
-structure IsEmbedding {X Y : TopPair} (f : X ⟶ Y)where
+structure IsEmbedding {X Y : TopPair} (f : X ⟶ Y) where
   fst : Topology.IsEmbedding (Hom.fst f)
   snd : Topology.IsEmbedding (Hom.snd f)
 

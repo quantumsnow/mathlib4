@@ -7,6 +7,8 @@ module
 
 public import Mathlib.Topology.Category.TopCat.Monoidal
 public import Mathlib.Topology.Homotopy.Basic
+public import Mathlib.Topology.Homotopy.Equiv
+public import Mathlib.CategoryTheory.Quotient
 
 /-!
 # Homotopies between morphisms in `TopCat`
@@ -81,5 +83,30 @@ lemma h_comp {f₀ f₁ : X ⟶ Y} {g₀ g₁ : Y ⟶ Z} (G : Homotopy g₀ g₁
   simp
 
 end Homotopy
+
+/-- Two maps between topological spaces are homotopic if there is a homotopy between them. -/
+abbrev Homotopic (f g : X ⟶ Y) := Nonempty (Homotopy f g)
+
+namespace Homotopic
+
+/-- Two maps of topological pairs being homotopic defines an equivalence relation. -/
+theorem equivalence : Equivalence (@Homotopic X Y) :=
+  ⟨fun f ↦ ⟨Homotopy.refl f⟩, fun h ↦ h.map Homotopy.symm, fun h₀ h₁ ↦ h₀.map2 Homotopy.trans h₁⟩
+
+abbrev homRel : HomRel TopCat := fun _ _ ↦ Homotopic
+
+instance : HomRel.IsStableUnderPrecomp homRel := ⟨fun _ _ _ h ↦ ⟨.comp h.some (.refl _)⟩⟩
+
+instance : HomRel.IsStableUnderPostcomp homRel := ⟨fun _ h ↦ ⟨.comp (.refl _) h.some⟩⟩
+
+abbrev TopHomotopyCat := CategoryTheory.Quotient homRel
+
+abbrev HomotopyEquiv (X Y : TopCat) := Iso (C := TopHomotopyCat) ((Quotient.functor _).obj X) ((Quotient.functor _).obj Y)
+
+def homotopyEquivEquiv : HomotopyEquiv X Y ≃ ContinuousMap.HomotopyEquiv X Y := sorry
+
+@[inherit_doc] scoped infixl:25 " ≃ₕ " => HomotopyEquiv
+
+end Homotopic
 
 end TopCat
