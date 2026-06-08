@@ -28,7 +28,7 @@ def isEmbeddingDiskBoundaryInclusion (n : ℕ) : Topology.IsEmbedding (diskBound
 noncomputable abbrev diskSpherePair (n : ℕ) :=
   TopPair.of (diskBoundaryInclusion.{u} n) (isEmbeddingDiskBoundaryInclusion.{u} n)
 
-abbrev sphereDiskHemisphereInclusion (n : ℕ) : 𝔻 n ⟶ 𝕊 n := sorry
+def sphereDiskHemisphereInclusion (n : ℕ) : 𝔻 n ⟶ 𝕊 n := sorry
 
 noncomputable abbrev sphereDiskPair (n : ℕ) := TopPair.of (sphereDiskHemisphereInclusion n) sorry
 
@@ -53,7 +53,7 @@ noncomputable abbrev isColimit_HZeroSphereZero' := (IsColimit.equivOfNatIsoOfIso
   (of PUnit) (of PUnit) (HP.H 0)) ((HP.H 0).mapCocone sphereZeroCofan) (HZeroSphereZeroCofan' HP)
   (Iso.refl _) (isColimit_HZeroSphereZero HP))
 
-noncomputable abbrev hZeroSphereZeroToCoeffGroupBiprod :
+noncomputable def hZeroSphereZeroToCoeffGroupBiprod :
     (HP.H 0).obj (𝕊 0) ⟶ (HP.coeffGroup) ⊞ (HP.coeffGroup) :=
   (isColimit_HZeroSphereZero' HP).desc
     (BinaryBiproduct.bicone (HP.coeffGroup) (HP.coeffGroup)).toCocone
@@ -67,14 +67,14 @@ namespace Reduced
 noncomputable abbrev hZeroSphereZeroToCoeffGroup := hToHPUnit HP 0 (𝕊 0)
 
 /-- The canonical map `reducedHₘ(Sⁿ) ⟶ Hₘ(Sⁿ, Dⁿ)` -/
-noncomputable abbrev reducedHSphereToHₚSphereDiskPair :
+noncomputable def reducedHSphereToHₚSphereDiskPair :
     (HP.reducedH m).obj (𝕊 n) ⟶ (HP.Hₚ m).obj (sphereDiskPair n) :=
   kernel.ι _ ≫ (HP.iso _).hom.app _ ≫ (HP.Hₚ _).map (sphereDiskPair _).j
 
 instance : IsIso (reducedHSphereToHₚSphereDiskPair HP m n) := sorry
 
 /-- The composition `Hₘ(Sⁿ, Dⁿ) ⟶ Hₘ(Sⁿ\pt, Dⁿ\pt) ⟶ Hₘ(Dⁿ, Sⁿ⁻¹)`. -/
-abbrev hₚSphereDiskPairToHₚDiskSpherePair :
+def hₚSphereDiskPairToHₚDiskSpherePair :
     (HP.Hₚ m).obj (sphereDiskPair n) ⟶ (HP.Hₚ m).obj (diskSpherePair n) := sorry
 
 instance : IsIso (hₚSphereDiskPairToHₚDiskSpherePair HP m n) := sorry
@@ -86,23 +86,28 @@ noncomputable abbrev hₚDiskSpherePairToReducedHSphere :
 
 instance : IsIso (hₚDiskSpherePairToReducedHSphere HP m n) := sorry
 
-noncomputable abbrev reducedHSuccSphereSuccToReducedHSphere :=
+noncomputable def reducedHSuccSphereSuccToReducedHSphere :=
   reducedHSphereToHₚSphereDiskPair HP (m + 1) (n + 1) ≫
     hₚSphereDiskPairToHₚDiskSpherePair HP (m + 1) (n + 1) ≫
     hₚDiskSpherePairToReducedHSphere HP m n
 
-instance : IsIso (reducedHSuccSphereSuccToReducedHSphere HP m n) := inferInstance
+instance : IsIso (reducedHSuccSphereSuccToReducedHSphere HP m n) := by
+  unfold reducedHSuccSphereSuccToReducedHSphere
+  infer_instance
 
 --TODO: can use `match` to avoid explicit `(m : ℕ) →` notation?
-noncomputable abbrev reducedHSphereToReducedHZeroSphere :
+noncomputable def reducedHSphereToReducedHZeroSphere :
     (k : ℕ) → (HP.reducedH k).obj (𝕊 (n + k)) ⟶ (HP.reducedH 0).obj (𝕊 n)
   | 0 => 𝟙 _
   | k + 1 => reducedHSuccSphereSuccToReducedHSphere HP k (n + k) ≫
       reducedHSphereToReducedHZeroSphere k
 
 instance : (k : ℕ) → IsIso (reducedHSphereToReducedHZeroSphere HP n k)
-  | 0 => inferInstance
+  | 0 => by
+      unfold reducedHSphereToReducedHZeroSphere
+      infer_instance
   | k + 1 => by
+      unfold reducedHSphereToReducedHZeroSphere
       have : IsIso (reducedHSphereToReducedHZeroSphere HP n k) :=
         instIsIsoAbReducedHSphereToReducedHZeroSphere k
       infer_instance
@@ -115,15 +120,18 @@ def isZero_reducedHSphere_of' [NeZero n] : (k : ℕ) → IsZero ((HP.reducedH k)
   | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of' 0)
       (asIso (reducedHSphereToReducedHZeroSphere HP n (k + 1)))
 
-noncomputable abbrev reducedHSphereToReducedHSphereZero :
+noncomputable def reducedHSphereToReducedHSphereZero :
     (k : ℕ) → (HP.reducedH (m + k)).obj (𝕊 k) ⟶ (HP.reducedH m).obj (𝕊 0)
   | 0 => 𝟙 _
   | k + 1 => reducedHSuccSphereSuccToReducedHSphere HP (m + k) k ≫
       reducedHSphereToReducedHSphereZero k
 
 instance : (k : ℕ) → IsIso (reducedHSphereToReducedHSphereZero HP m k)
-  | 0 => inferInstance
+  | 0 => by
+      unfold reducedHSphereToReducedHSphereZero
+      infer_instance
   | k + 1 => by
+      unfold reducedHSphereToReducedHSphereZero
       have : IsIso (reducedHSphereToReducedHSphereZero HP m k) :=
         instIsIsoAbReducedHSphereToReducedHSphereZero k
       infer_instance
@@ -151,7 +159,7 @@ def isZero_reducedHSphere_of {m n} (hmn : m ≠ n) : IsZero ((HP.reducedH m).obj
     exact isZero_reducedHSphere_of'' HP (m := m - n) n
 
 -- This definition has the disadvantage that `reducedHSphereToCoeffGroup HP n` is not DefEq to `reducedHSphereToReducedHSphereZero HP 0 n ≫ reducedHSphereToCoeffGroup HP 0` but not sure if this will be a problem yet
-noncomputable abbrev reducedHSphereToCoeffGroup :
+noncomputable def reducedHSphereToCoeffGroup :
     (n : ℕ) → (HP.reducedH n).obj (𝕊 n) ⟶ HP.coeffGroup
   | 0 => sorry
   | n + 1 => reducedHSuccSphereSuccToReducedHSphere HP n n ≫ reducedHSphereToCoeffGroup n
@@ -159,12 +167,13 @@ noncomputable abbrev reducedHSphereToCoeffGroup :
 instance : (n : ℕ) → IsIso (reducedHSphereToCoeffGroup HP n)
   | 0 => sorry
   | n + 1 => by
+      unfold reducedHSphereToCoeffGroup
       have : IsIso (reducedHSphereToCoeffGroup HP n) := instIsIsoAbReducedHSphereToCoeffGroup n
       infer_instance
 
 end Reduced
 
-noncomputable abbrev hZeroSphereToCoeffGroup [NeZero n] :
+noncomputable def hZeroSphereToCoeffGroup [NeZero n] :
     (HP.H 0).obj (𝕊 n) ⟶ HP.coeffGroup :=
   (asIso (hToReducedHBiprod HP 0 (𝕊 n))).hom ≫
     (isoZeroBiprod (Reduced.isZero_reducedHSphere_of' HP n 0)).inv
@@ -174,7 +183,7 @@ instance [NeZero n] : IsIso (hZeroSphereToCoeffGroup HP n) := by
   unfold hZeroSphereToCoeffGroup
   infer_instance
 
-noncomputable abbrev hSphereToCoeffGroup [NeZero n] : (HP.H n).obj (𝕊 n) ⟶ HP.coeffGroup := (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ Reduced.reducedHSphereToCoeffGroup HP n
+noncomputable def hSphereToCoeffGroup [NeZero n] : (HP.H n).obj (𝕊 n) ⟶ HP.coeffGroup := (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ Reduced.reducedHSphereToCoeffGroup HP n
 
 --TODO: is this needed if it can be inferred? If it is needed, should name this something more useful?
 instance [NeZero n] : IsIso (hSphereToCoeffGroup HP n) := by

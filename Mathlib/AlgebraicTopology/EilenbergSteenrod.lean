@@ -156,11 +156,11 @@ noncomputable def reducedH : TopCat.{u} ⥤ C where
 noncomputable def reducedHToH : HP.reducedH i ⟶ HP.H i where
   app X := kernel.ι _
 
-noncomputable abbrev reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
+noncomputable def reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
   (reducedHToH HP _).app _ ≫ hToHPUnit HP _ _
 
  --TODO: can make this natural transformation?
-abbrev hToReducedHBiprod [HasBinaryBiproducts C] :
+def hToReducedHBiprod [HasBinaryBiproducts C] :
     (HP.H i).obj X ⟶ (HP.reducedH i).obj X ⊞ (HP.H i).obj (TopCat.of PUnit) := sorry
 
 instance [HasBinaryBiproducts C] : IsIso (HP.hToReducedHBiprod i X) := sorry
@@ -355,7 +355,7 @@ namespace TopPair.HomologyPretheory
 variable [HasKernels C]
 
 @[simps!]
-noncomputable abbrev reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
+noncomputable def reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
   app X := kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) <| by
     erw [hToHPUnit,
       ← TopPair.Hom.snd_ofHom (Y := diag.obj (TopCat.of PUnit)) (isTerminalPUnit.from X.fst)
