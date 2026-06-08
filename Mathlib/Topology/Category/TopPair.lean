@@ -52,7 +52,7 @@ abbrev of {A X : TopCat.{u}} (f : A ⟶ X) (h : Topology.IsEmbedding f) : TopPai
 
 /-- Constructor for a topological pair (X, A) where A ⊆ X. -/
 abbrev ofSubset {X : TopCat.{u}} (A : Set X) : TopPair.{u} := TopPair.of (A := (TopCat.of A))
-  (X := X) ⟨{ toFun := Subtype.val }⟩ Topology.IsEmbedding.subtypeVal
+  (X := X) (TopCat.ofHom { toFun := Subtype.val }) Topology.IsEmbedding.subtypeVal
 
 /-- Constructs the topological pair `(X, ∅)` from `X : TopCat`. -/
 abbrev ofTopCat (X : TopCat.{u}) : TopPair.{u} :=
@@ -85,19 +85,19 @@ attribute [local simp] Hom.w_apply
 
 /-- The functor from topological pairs to topological spaces that forgets the second space, i.e. the
 projection to the first space. -/
-abbrev proj₁ : TopPair.{u} ⥤ TopCat.{u} :=
+def proj₁ : TopPair.{u} ⥤ TopCat.{u} :=
   MorphismProperty.Arrow.forget _ _ _ ⋙ CategoryTheory.Arrow.rightFunc
 
--- simps generates the wrong lemmas
+-- `simps` generates the wrong lemmas
 @[simp]
 lemma proj₁_obj (X : TopPair) : proj₁.obj X = X.fst := rfl
 
 @[simp]
-lemma proj₁_map {X Y : TopPair} (f : X ⟶ Y) : proj₁.map f = Hom.fst f := rfl
+lemma proj₁_map (f : X ⟶ Y) : proj₁.map f = Hom.fst f := rfl
 
 /-- The functor from topological pairs to topological spaces that forgets the first space, i.e. the
 projection to the second space. -/
-abbrev proj₂ : TopPair.{u} ⥤ TopCat.{u} :=
+def proj₂ : TopPair.{u} ⥤ TopCat.{u} :=
   MorphismProperty.Arrow.forget _ _ _ ⋙ CategoryTheory.Arrow.leftFunc
 
 -- simps generates the wrong lemmas
@@ -105,7 +105,7 @@ abbrev proj₂ : TopPair.{u} ⥤ TopCat.{u} :=
 lemma proj₂_obj (X : TopPair) : proj₂.obj X = X.snd := rfl
 
 @[simp]
-lemma proj₂_map {X Y : TopPair} (f : X ⟶ Y) : proj₂.map f = Hom.snd f := rfl
+lemma proj₂_map (f : X ⟶ Y) : proj₂.map f = Hom.snd f := rfl
 
 /-- The inclusion functor from topological spaces to topological pairs that sends a space X to
 (X, ∅). -/
@@ -120,6 +120,7 @@ abbrev diag : TopCat.{u} ⥤ TopPair.{u} where
   obj X := TopPair.of (𝟙 X) Topology.IsEmbedding.id
   map f := TopPair.ofHom f f
 
+set_option backward.defeqAttrib.useBackward true in
 /-- The inclusion functor is left adjoint to the projection to the first component. -/
 @[simps]
 def inclAdjProj₁ : incl ⊣ proj₁ where
@@ -133,6 +134,7 @@ def proj₁AdjDiag : proj₁ ⊣ diag where
   unit.naturality X Y f := MorphismProperty.Arrow.Hom.ext f.w (by cat_disch)
   counit.app X := 𝟙 X
 
+set_option backward.defeqAttrib.useBackward true in
 /-- The unique morphism (X, ∅) ⟶ (X, A) that is the identity on X. -/
 abbrev j (X : TopPair.{u}) : TopPair.incl.obj X.fst ⟶ X :=
   TopPair.ofHom (𝟙 _) (TopCat.isInitialPEmpty.to _)
