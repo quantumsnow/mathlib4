@@ -425,15 +425,15 @@ variable (HP HP' : HomologyPretheory.{u} C (ComplexShape.down ℕ))
 /-- A `HomologyPretheory` on `ComplexShape.down ℕ` has the dimension axiom if it is trivial on the
 terminal space for `n > 0`. -/
 class HasDimensionAxiom where
-  dimension : ∀ (n : ℕ) (_ : 0 < n), IsZero ((HP.H n).obj (of PUnit)) := by cat_disch
+  dimension : ∀ (n : ℕ) [NeZero n], IsZero ((HP.H n).obj (of PUnit)) := by cat_disch
 
 instance : IsClosedUnderIsomorphisms (C := HomologyPretheory C (ComplexShape.down ℕ))
     HasDimensionAxiom where
-  of_iso {HP HP'} e h := ⟨fun n hn ↦ (Iso.isZero_iff (((HP.iso _) ≪≫ Functor.isoWhiskerLeft incl
+  of_iso {HP HP'} e h := ⟨fun n ↦ (Iso.isZero_iff (((HP.iso _) ≪≫ Functor.isoWhiskerLeft incl
     ((HomologyPretheory.forgetₚ _).mapIso e) ≪≫ (HP'.iso _).symm).app
-    (of PUnit))).mp (h.dimension n hn)⟩
+    (of PUnit))).mp (h.dimension n)⟩
 
-instance [HasKernels C] [HasDimensionAxiom HP] {n : ℕ} (hn : n > 0) (X : TopCat.{u}) :
+instance [HasKernels C] [HasDimensionAxiom HP] {n : ℕ} [NeZero n] (X : TopCat.{u}) :
     IsIso ((reducedHToH HP n).app X) := sorry
 
 /-- An Eilenberg-Steenrod homology theory is an extraordinary Eilenberg-Steenrod homology theory

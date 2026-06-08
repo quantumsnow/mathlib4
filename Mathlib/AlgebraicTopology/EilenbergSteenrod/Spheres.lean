@@ -107,12 +107,12 @@ instance : (k : ℕ) → IsIso (reducedHSphereToReducedHZeroSphere HP n k)
         instIsIsoAbReducedHSphereToReducedHZeroSphere k
       infer_instance
 
-def isZero_reducedHSphere_of' {n} (hn : n > 0) : (k : ℕ) → IsZero ((HP.reducedH k).obj (𝕊 (n + k)))
+def isZero_reducedHSphere_of' [NeZero n] : (k : ℕ) → IsZero ((HP.reducedH k).obj (𝕊 (n + k)))
   | 0 => by
       have : IsZero ((HP.H 0).obj (𝕊 n)) := sorry
       have := IsZero.mono this ((HP.H 0).map (isTerminalPUnit.from (𝕊 n)))
       exact isZero_kernel_of_mono ((HP.H 0).map (isTerminalPUnit.from (𝕊 n)))
-  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of' hn 0)
+  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of' 0)
       (asIso (reducedHSphereToReducedHZeroSphere HP n (k + 1)))
 
 noncomputable abbrev reducedHSphereToReducedHSphereZero :
@@ -128,12 +128,12 @@ instance : (k : ℕ) → IsIso (reducedHSphereToReducedHSphereZero HP m k)
         instIsIsoAbReducedHSphereToReducedHSphereZero k
       infer_instance
 
-def isZero_reducedHSphere_of'' {m} (hm : m > 0) : (k : ℕ) → IsZero ((HP.reducedH (m + k)).obj (𝕊 k))
+def isZero_reducedHSphere_of'' [NeZero m] : (k : ℕ) → IsZero ((HP.reducedH (m + k)).obj (𝕊 k))
   | 0 => by
       have : IsZero ((HP.H m).obj (𝕊 0)) := sorry
       have := IsZero.mono this ((HP.H m).map (isTerminalPUnit.from (𝕊 0)))
       exact isZero_kernel_of_mono ((HP.H m).map (isTerminalPUnit.from (𝕊 0)))
-  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of'' hm 0)
+  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of'' 0)
       (asIso (reducedHSphereToReducedHSphereZero HP m (k + 1)))
 
 --TODO: fold the proofs for the primed statements into this?
@@ -142,11 +142,13 @@ def isZero_reducedHSphere_of {m n} (hmn : m ≠ n) : IsZero ((HP.reducedH m).obj
   case inl h =>
     have : n = n - m + m := by lia
     rw [this]
-    exact isZero_reducedHSphere_of' HP (n := n - m) (by lia) m
+    have : NeZero (n - m) := sorry
+    exact isZero_reducedHSphere_of' HP (n := n - m) m
   case inr h =>
     have : m = m - n + n := by lia
     rw [this]
-    exact isZero_reducedHSphere_of'' HP (m := m - n) (by lia) n
+    have : NeZero (m - n) := sorry
+    exact isZero_reducedHSphere_of'' HP (m := m - n) n
 
 -- This definition has the disadvantage that `reducedHSphereToCoeffGroup HP n` is not DefEq to `reducedHSphereToReducedHSphereZero HP 0 n ≫ reducedHSphereToCoeffGroup HP 0` but not sure if this will be a problem yet
 noncomputable abbrev reducedHSphereToCoeffGroup :
@@ -162,24 +164,23 @@ instance : (n : ℕ) → IsIso (reducedHSphereToCoeffGroup HP n)
 
 end Reduced
 
-noncomputable abbrev hZeroSphereToCoeffGroup {n} (hn : n > 0) :
+noncomputable abbrev hZeroSphereToCoeffGroup [NeZero n] :
     (HP.H 0).obj (𝕊 n) ⟶ HP.coeffGroup :=
   (asIso (hToReducedHBiprod HP 0 (𝕊 n))).hom ≫
-    (isoZeroBiprod (Reduced.isZero_reducedHSphere_of' HP hn 0)).inv
+    (isoZeroBiprod (Reduced.isZero_reducedHSphere_of' HP n 0)).inv
 
 --TODO: is this needed if it can be inferred? If it is needed, should name this something more useful?
-instance {n} (hn : n > 0) : IsIso (hZeroSphereToCoeffGroup HP hn) := inferInstance
+instance [NeZero n] : IsIso (hZeroSphereToCoeffGroup HP n) := by
+  unfold hZeroSphereToCoeffGroup
+  infer_instance
 
-noncomputable abbrev hSphereToCoeffGroup {n} (hn : n > 0) : (HP.H n).obj (𝕊 n) ⟶ HP.coeffGroup := by
-  have := instIsIsoAppTopCatReducedHToHNatOfHasDimensionAxiomOfGtOfNat HP hn (𝕊 n) --TODO: make this inferred automatically?
-  exact (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ Reduced.reducedHSphereToCoeffGroup HP n
+noncomputable abbrev hSphereToCoeffGroup [NeZero n] : (HP.H n).obj (𝕊 n) ⟶ HP.coeffGroup := (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ Reduced.reducedHSphereToCoeffGroup HP n
 
 --TODO: is this needed if it can be inferred? If it is needed, should name this something more useful?
-instance {n} (hn : n > 0) : IsIso (hSphereToCoeffGroup HP hn) := inferInstance
+instance [NeZero n] : IsIso (hSphereToCoeffGroup HP n) := by
+  unfold hSphereToCoeffGroup
+  infer_instance
 
-def isZero_HSphere_of {m n} (hm : m > 0) (hmn : m ≠ n) : IsZero ((HP.H m).obj (𝕊 n)) := by
-  have := instIsIsoAppTopCatReducedHToHNatOfHasDimensionAxiomOfGtOfNat HP hm (𝕊 n) --TODO: make this inferred automatically?
-  exact IsZero.of_iso (Reduced.isZero_reducedHSphere_of HP hmn)
-    (asIso ((HP.reducedHToH m).app (𝕊 n))).symm
+def isZero_HSphere_of [NeZero m] (hmn : m ≠ n) : IsZero ((HP.H m).obj (𝕊 n)) := IsZero.of_iso (Reduced.isZero_reducedHSphere_of HP hmn) (asIso ((HP.reducedHToH m).app (𝕊 n))).symm
 
 end EilenbergSteenrod.Spheres
