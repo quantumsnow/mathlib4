@@ -394,6 +394,8 @@ variable [HasPairSequence HP]
 
 lemma isZeroHₚDiagOfHasPairSequence (X : TopCat.{u}) : IsZero ((HP.Hₚ i).obj (diag.obj X)) := sorry
 
+section Reduced
+
 variable [HasKernels C]
 
 @[simps!]
@@ -416,22 +418,16 @@ noncomputable abbrev reducedδ.app' (X : TopPair) : (HP.Hₚ i).obj X ⟶ (HP.re
 @[simp]
 lemma reducedδ_app' (X : TopPair) : reducedδ.app' HP i j X = (HP.reducedδ i j).app X := rfl
 
-class HasReducedPairSequence [instKer : HasKernels C] (HP : HomologyPretheory.{u} C c) where
-  /-- Exactness of the sequence `H i X.fst ⟶ Hₚ i X ⟶ H j X.snd.` -/
-  exact_pair [instKer] (HP) (X : TopPair) (i j) (hij : c.Rel i j) :
-      (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) (kernel.lift (hToHPUnit HP j X.snd)
-        ((HP.δ i j).app _) (sorry))).Exact := by cat_disch
-  /-- Exactness of the sequence `Hₚ i X ⟶ H j X.snd ⟶ H j X.fst`. -/
-  exact_snd [instKer] (HP) (X : TopPair) (i j) (hij : c.Rel i j) :
-      (ComposableArrows.mk₂ (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry))
-      ((HP.reducedH j).map X.map)).Exact := by cat_disch
-  /-- Exactness of the sequence `H i X.snd ⟶ H i X.fst ⟶ Hₚ i X`. -/
-  exact_fst [instKer] (HP) (X : TopPair) (i) :
-      (ComposableArrows.mk₂ ((HP.reducedH i).map X.map)
-        (kernel.ι (hToHPUnit HP i X.fst) ≫ (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.j)).Exact :=
-    by cat_disch
+lemma hasReducedPairSequence_of_HasPairSequence.exact_pair (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
+    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry))).Exact := by cat_disch
 
-instance [HasPairSequence HP] : HasReducedPairSequence HP := sorry
+lemma hasReducedPairSequence_of_HasPairSequence.exact_snd (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
+    (ComposableArrows.mk₂ (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry)) ((HP.reducedH j).map X.map)).Exact := by cat_disch
+
+lemma hasReducedPairSequence_of_HasPairSequence.exact_fst (HP : HomologyPretheory.{u} C c) (X : TopPair) (i) :
+    (ComposableArrows.mk₂ ((HP.reducedH i).map X.map) (kernel.ι (hToHPUnit HP i X.fst) ≫ (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.j)).Exact := sorry
+
+end Reduced
 
 end HasPairSequence
 
