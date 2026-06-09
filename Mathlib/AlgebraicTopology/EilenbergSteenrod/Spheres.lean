@@ -9,11 +9,10 @@ public import Mathlib.Algebra.Category.Grp.Biproducts
 public import Mathlib.Topology.Category.TopCat.Sphere
 public import Mathlib.CategoryTheory.Functor.Basic
 public import Mathlib.AlgebraicTopology.EilenbergSteenrod
-public import Mathlib.Topology.Category.TopCat.Sphere
 
 @[expose] public section
 
-open CategoryTheory TopCat TopPair CategoryTheory.Limits HomologyPretheory
+open CategoryTheory TopCat TopPair Limits HomologyPretheory
 
 namespace EilenbergSteenrod.Spheres
 
@@ -43,7 +42,7 @@ noncomputable abbrev sphereZeroCofan := BinaryCofan.mk ptInclSphereZeroPos.{u} p
 def isColimit_sphereZeroCofan : IsColimit sphereZeroCofan.{u} := sorry
 
 noncomputable def isColimit_HZeroSphereZero : IsColimit ((HP.H 0).mapCocone sphereZeroCofan) :=
-  (((IsAdditive.additive_of_small HP WalkingPair 0).preservesColimit).preserves
+  (((IsAdditive.preserves_coproducts_of_small HP WalkingPair 0).preservesColimit).preserves
     isColimit_sphereZeroCofan).some
 
 noncomputable abbrev HZeroSphereZeroCofan' := (Cocone.precomposeEquivalence (pairComp (of PUnit)

@@ -11,7 +11,6 @@ public import Mathlib.Combinatorics.Quiver.ReflQuiver
 public import Mathlib.Order.BourbakiWitt
 public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Topology.Category.TopPair
-public import Mathlib.Topology.Category.TopCat.Bicategory
 public import Mathlib.Topology.Homotopy.Contractible
 
 /-!
@@ -163,6 +162,7 @@ noncomputable def reducedH : TopCat.{u} ⥤ C where
 
 noncomputable def reducedHToH : HP.reducedH i ⟶ HP.H i where
   app X := kernel.ι _
+  naturality := sorry -- TODO: this used to be automatic. why not anymore?
 
 noncomputable def reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
   (reducedHToH HP _).app _ ≫ hToHPUnit HP _ _
@@ -175,7 +175,7 @@ instance [HasBinaryBiproducts C] : IsIso (HP.hToReducedHBiprod i X) := sorry
 
 end ReducedHomology
 
-variable (HP HP' : HomologyPretheory.{u} C c)
+variable (HP HP' : HomologyPretheory.{u} C c) (i : ι)
 
 /-- A `HomologyPretheory` is homotopy-invariant if its homology functor `Hₚ` takes homotopic maps to
 the same map in homology -/
@@ -205,9 +205,9 @@ open Homotopic
 variable [IsHomotopyInvariant HP]
 
 def Hₚ : TopPairHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopPair.Homotopic.homRel
-  (HP.Hₚ i) <| fun _ _ _ _ h ↦ IsHomotopyInvariant.homotopy _ _ h _
+  (HP.Hₚ i) <| fun _ _ _ _ h ↦ HP.map_eq_of_homotopy h.some _
 
-lemma quotient_Hₚ_eq : Quotient.functor _ ⋙ (Hₚ HP i) = HP.Hₚ i := Quotient.lift_spec _ _ _
+lemma quotient_Hₚ_eq : Quotient.functor _ ⋙ (IsHomotopyInvariant.Hₚ HP i) = HP.Hₚ i := Quotient.lift_spec _ _ _
 
 def hₚIsoOfHomotopyEquiv (X Y : TopPair.{u}) (e : X ≃ₕ Y) : (HP.Hₚ i).obj X ≅ (HP.Hₚ i).obj Y :=
   Functor.mapIso (Hₚ HP i) e
@@ -235,8 +235,6 @@ class HasExcisionIso where
       (hf : IsEmbedding f) (hg : IsEmbedding g) (hcompl : TopPair.IsCompl f g)
       (hU : closure (Set.range (Hom.fst f)) ⊆ interior (Set.range X.map)) (i : ι) :
       IsIso ((HP.Hₚ i).map g)]
-
-attribute [instance] HasExcisionIso.isIso_of_closure_interior_of_isCompl
 
 export HasExcisionIso (isIso_of_closure_interior_of_isCompl)
 
@@ -396,8 +394,6 @@ variable [HasPairSequence HP]
 
 lemma isZeroHₚDiagOfHasPairSequence (X : TopCat.{u}) : IsZero ((HP.Hₚ i).obj (diag.obj X)) := sorry
 
-namespace TopPair.HomologyPretheory
-
 variable [HasKernels C]
 
 @[simps!]
@@ -437,6 +433,8 @@ class HasReducedPairSequence [instKer : HasKernels C] (HP : HomologyPretheory.{u
 
 instance [HasPairSequence HP] : HasReducedPairSequence HP := sorry
 
+end HasPairSequence
+
 /-- An extraordinary Eilenberg-Steenrod homology theory requires the homotopy, excision, additivity,
 and exactness axioms. -/
 class IsExtraordinaryEilenbergSteenrod where
@@ -450,9 +448,7 @@ class IsExtraordinaryEilenbergSteenrod where
   theory. -/
   [hasPairSequence : HP.HasPairSequence]
 
-attribute [attribute [instance] IsExtraordinaryEilenbergSteenrod.homotopy IsExtraordinaryEilenbergSteenrod.excision IsExtraordinaryEilenbergSteenrod.additive IsExtraordinaryEilenbergSteenrod.exact
-
-instance] IsExtraordinaryEilenbergSteenrod.isHomotopyInvariant
+attribute [instance] IsExtraordinaryEilenbergSteenrod.isHomotopyInvariant
   IsExtraordinaryEilenbergSteenrod.hasExcisionIso
   IsExtraordinaryEilenbergSteenrod.isAdditive
   IsExtraordinaryEilenbergSteenrod.hasPairSequence
@@ -481,7 +477,7 @@ variable (HP HP' : HomologyPretheory.{u} C (ComplexShape.down ℕ))
 /-- A `HomologyPretheory` on `ComplexShape.down ℕ` has the dimension axiom if it is trivial on the
 terminal space for `n > 0`. -/
 class HasDimensionAxiom where
-  isZero_PUnit_of_gt_zero : ∀ (n : ℕ) [NeZero n], IsZero ((HP.H n).obj (of PUnit)) :=
+  isZero_PUnit_of_gt_zero : ∀ (n : ℕ) [NeZero n], IsZero ((HP.H n).obj (TopCat.of PUnit)) :=
     by cat_disch
 
 export HasDimensionAxiom (isZero_PUnit_of_gt_zero)
@@ -497,7 +493,7 @@ lemma hasDimensionAxiom_iff : hasDimensionAxiom C HP ↔ HP.HasDimensionAxiom :=
 instance : IsClosedUnderIsomorphisms (hasDimensionAxiom.{u} C) where
   of_iso {HP HP'} e h := ⟨fun n ↦ (Iso.isZero_iff (((HP.iso _) ≪≫ Functor.isoWhiskerLeft incl
     ((hₚFunctor _).mapIso e) ≪≫ (HP'.iso _).symm).app
-    (of PUnit))).mp (h.isZero_PUnit_of_gt_zero n)⟩
+    (TopCat.of PUnit))).mp (h.isZero_PUnit_of_gt_zero n)⟩
 
 instance [HasKernels C] [HasDimensionAxiom HP] {n : ℕ} [NeZero n] (X : TopCat.{u}) :
     IsIso ((reducedHToH HP n).app X) := sorry
