@@ -68,13 +68,17 @@ variable {X Y Z : TopPair.{u}}
 abbrev Hom.fst (f : X ⟶ Y) : X.fst ⟶ Y.fst := f.hom.right
 
 @[simp]
-lemma Hom.fst_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.fst (ofHom f g) = f := rfl
+lemma Hom.fst_ofHom
+      (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) :
+    Hom.fst (ofHom f g) = f := rfl
 
 /-- The map between the second spaces -/
 abbrev Hom.snd (f : X ⟶ Y) : X.snd ⟶ Y.snd := f.hom.left
 
 @[simp]
-lemma Hom.snd_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.snd (ofHom f g) = g := rfl
+lemma Hom.snd_ofHom
+      (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) :
+    Hom.snd (ofHom f g) = g := rfl
 
 @[reassoc, elementwise]
 lemma Hom.w {X Y : TopPair.{u}} (f : X ⟶ Y) :
@@ -227,18 +231,22 @@ namespace Homotopic
 theorem equivalence : Equivalence (Homotopic (X := X) (Y := Y)) :=
   ⟨fun f ↦ ⟨Homotopy.refl f⟩, fun h ↦ h.map Homotopy.symm, fun h₀ h₁ ↦ h₀.map2 Homotopy.trans h₁⟩
 
+/-- The `HomRel` given by maps being homotopic. -/
 abbrev homRel : HomRel TopPair := fun _ _ ↦ Homotopic
 
 instance : HomRel.IsStableUnderPrecomp homRel := ⟨fun _ _ _ h ↦ ⟨.comp h.some (.refl _)⟩⟩
 
 instance : HomRel.IsStableUnderPostcomp homRel := ⟨fun _ h ↦ ⟨.comp (.refl _) h.some⟩⟩
 
+/-- The homotopy category of `TopPair` has morphism identified that are homotopic. -/
 abbrev TopPairHomotopyCat := CategoryTheory.Quotient homRel
 
+/-- A homotopy equivalence of topological pairs is an isomorphism in the homotopy category, i.e. a
+map that has an inverse up to homotopy. -/
 abbrev HomotopyEquiv (X Y : TopPair) :=
   Iso (C := TopPairHomotopyCat) ((Quotient.functor _).obj X) ((Quotient.functor _).obj Y)
 
-@[inherit_doc] scoped infixl:25 " ≃ₕ " => HomotopyEquiv
+@[inherit_doc] infixl:25 " ≃ₕ " => HomotopyEquiv
 
 end Homotopic
 

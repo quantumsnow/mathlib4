@@ -35,6 +35,16 @@ that the closure of `Hom.fst f (U.fst)` is a subset of the interior of the image
 `X.fst`. Then the excision axiom postulates that the homology of `X` is isomorphic to that of `V`.
 Note that this closure condition a priori seems weaker than in the literature. However, we prove
 that under these assumptions, `U` is actually an isomorphism.
+
+Most significant gaps/`sorry`s:
+* `hIsoReducedHBiprod`: construct the isomorphism `H i X ≅ reducedH i X ⊞ H i ∗`
+* If `X` is contractible, the induced map `H 0 X ⟶ H 0 ∗` is an isomorphism.
+* `isZeroHₚDiagOfHasPairSequence`: if a homology theory has an exact pair sequence, `H m (X, X)` is
+  trivial
+* `has_reduced_pair_sequence_exact_pair`, `has_reduced_pair_sequence_exact_snd`,
+`has_reduced_pair_sequence_exact_fst`: exactness of the long exact sequence in reduced homology
+* For a homology theory with the dimension axiom and `m ≠ 0`, the inclusion `reducedH m X → H m X`
+  is an isomorphism.
 -/
 
 @[expose] public section
@@ -142,15 +152,18 @@ def hFunctor (i : ι) : HomologyPretheory.{u} C c ⥤ TopCat.{u} ⥤ C where
 instance (f : HP ⟶ HP') [IsIso f] (i : ι) : IsIso (f.hom i) :=
   inferInstanceAs (IsIso ((HomologyPretheory.hFunctor i).map f))
 
---TODO: rename to reflect target categories other than `Ab` (also rename derived names!)
-abbrev coeffGroup [Zero ι] (HP : HomologyPretheory C c) := (HP.H 0).obj (TopCat.of PUnit)
+/-- The coefficient object of a homology theory is `H 0 ∗`. -/
+abbrev coeffObj [Zero ι] (HP : HomologyPretheory C c) := (HP.H 0).obj (TopCat.of PUnit)
 
 section ReducedHomology
 
 variable (HP) [HasKernels C] (i j : ι) (X : TopCat)
 
-abbrev hToHPUnit := (HP.H i).map (TopCat.isTerminalPUnit.from X)
+/-- The induced map `H i X ⟶ H i ∗`. -/
+abbrev hToHPUnit : (HP.H i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
+  (HP.H i).map (TopCat.isTerminalPUnit.from X)
 
+/-- Reduced homology is the kernel of the induced map `H i X ⟶ H i ∗` in unreduced homology. -/
 @[simps]
 noncomputable def reducedH : TopCat.{u} ⥤ C where
   obj X := kernel (hToHPUnit HP i X)
@@ -160,18 +173,14 @@ noncomputable def reducedH : TopCat.{u} ⥤ C where
         cat_disch
       cat_disch
 
+/-- The canonical inclusion of reduced homology into unreduced homology. -/
 noncomputable def reducedHToH : HP.reducedH i ⟶ HP.H i where
   app X := kernel.ι _
-  naturality := sorry -- TODO: this used to be automatic. why not anymore?
+  naturality := sorry
 
-noncomputable def reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
-  (reducedHToH HP _).app _ ≫ hToHPUnit HP _ _
-
- --TODO: can make this natural transformation?
-def hToReducedHBiprod [HasBinaryBiproducts C] :
-    (HP.H i).obj X ⟶ (HP.reducedH i).obj X ⊞ (HP.H i).obj (TopCat.of PUnit) := sorry
-
-instance [HasBinaryBiproducts C] : IsIso (HP.hToReducedHBiprod i X) := sorry
+/-- The isomorphism `H i X ≅ reducedH i X ⊞ H i ∗` -/
+def hIsoReducedHBiprod [HasBinaryBiproducts C] :
+    (HP.H i).obj X ≅ (HP.reducedH i).obj X ⊞ (HP.H i).obj (TopCat.of PUnit) := sorry
 
 end ReducedHomology
 
@@ -204,26 +213,20 @@ open Homotopic
 
 variable [IsHomotopyInvariant HP]
 
-def Hₚ : TopPairHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopPair.Homotopic.homRel
+/-- If a `HomologyPretheory` is homotopy-invariant, it induces a functor from the homotopy category of `TopPair`. -/
+def homotopyHₚ : TopPairHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopPair.Homotopic.homRel
   (HP.Hₚ i) <| fun _ _ _ _ h ↦ HP.map_eq_of_homotopy h.some _
 
-lemma quotient_Hₚ_eq : Quotient.functor _ ⋙ (IsHomotopyInvariant.Hₚ HP i) = HP.Hₚ i := Quotient.lift_spec _ _ _
+lemma quotient_Hₚ_eq : Quotient.functor _ ⋙ (homotopyHₚ HP i) = HP.Hₚ i :=
+  Quotient.lift_spec _ _ _
 
-def hₚIsoOfHomotopyEquiv (X Y : TopPair.{u}) (e : X ≃ₕ Y) : (HP.Hₚ i).obj X ≅ (HP.Hₚ i).obj Y :=
-  Functor.mapIso (Hₚ HP i) e
+/-- If a `HomologyPretheory` is homotopy invariant, it maps homotopy equivalences to isomorphisms. -/
+def hₚIsoOfHomotopyEquiv {X Y : TopPair.{u}} (e : X ≃ₕ Y) : (HP.Hₚ i).obj X ≅ (HP.Hₚ i).obj Y :=
+  (homotopyHₚ HP i).mapIso e
 
-def H : TopHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopCat.Homotopic.homRel (HP.H i) sorry
-
-lemma quotient_H_eq : Quotient.functor _ ⋙ (H HP i) = HP.H i := Quotient.lift_spec _ _ _
-
-def hIsoOfHomotopyEquiv (X Y : TopCat.{u}) (e : X ≃ₕ Y) : (HP.H i).obj X ≅ (HP.H i).obj Y :=
-  Functor.mapIso (H HP i) e
-
-abbrev hZeroToCoeffGroup [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) :
-    (HP.H 0).obj X ⟶ HP.coeffGroup := hToHPUnit _ _ _
-
+/-- If `X` is contractible, the induced map `H 0 X ⟶ H 0 ∗` is an isomorphism. -/
 instance [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) [ContractibleSpace X] :
-    IsIso (hZeroToCoeffGroup HP X) := sorry
+    IsIso (HP.hToHPUnit 0 X) := sorry
 
 end IsHomotopyInvariant
 
@@ -398,6 +401,7 @@ section Reduced
 
 variable [HasKernels C]
 
+/-- The boundary map in reduced homology. -/
 @[simps!]
 noncomputable def reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
   app X := kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) <| by
@@ -413,19 +417,20 @@ noncomputable def reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
     rfl
   naturality X Y f := sorry
 
-noncomputable abbrev reducedδ.app' (X : TopPair) : (HP.Hₚ i).obj X ⟶ (HP.reducedH j).obj X.snd :=  (HP.reducedδ i j).app X
+lemma has_reduced_pair_sequence_exact_pair
+      (X : TopPair) (i j) (hij : c.Rel i j) :
+    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _)
+      sorry)).Exact := by cat_disch
 
-@[simp]
-lemma reducedδ_app' (X : TopPair) : reducedδ.app' HP i j X = (HP.reducedδ i j).app X := rfl
+lemma has_reduced_pair_sequence_exact_snd
+      (X : TopPair) (i j) (hij : c.Rel i j) :
+    (ComposableArrows.mk₂ (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) sorry)
+      ((HP.reducedH j).map X.map)).Exact := by cat_disch
 
-lemma hasReducedPairSequence_of_HasPairSequence.exact_pair (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
-    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry))).Exact := by cat_disch
-
-lemma hasReducedPairSequence_of_HasPairSequence.exact_snd (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
-    (ComposableArrows.mk₂ (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry)) ((HP.reducedH j).map X.map)).Exact := by cat_disch
-
-lemma hasReducedPairSequence_of_HasPairSequence.exact_fst (HP : HomologyPretheory.{u} C c) (X : TopPair) (i) :
-    (ComposableArrows.mk₂ ((HP.reducedH i).map X.map) (kernel.ι (hToHPUnit HP i X.fst) ≫ (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.j)).Exact := sorry
+lemma has_reduced_pair_sequence_exact_fst
+      (X : TopPair) (i) :
+    (ComposableArrows.mk₂ ((HP.reducedH i).map X.map) (kernel.ι (hToHPUnit HP i X.fst) ≫
+      (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.j)).Exact := sorry
 
 end Reduced
 
