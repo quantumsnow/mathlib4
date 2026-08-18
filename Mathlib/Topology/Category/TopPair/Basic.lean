@@ -25,7 +25,7 @@ homotopies between them.
 
 universe u
 
-open TopologicalSpace TopCat CategoryTheory MonoidalCategory
+open TopologicalSpace TopCat CategoryTheory MonoidalCategory Opposite Limits
 
 /-- A pair of topological spaces consists of an embedding `f : A ⟶ X` in `TopCat`. -/
 abbrev TopPair :=
@@ -53,6 +53,8 @@ abbrev of {A X : TopCat.{u}} (f : A ⟶ X) (h : Topology.IsEmbedding f) : TopPai
 /-- Constructor for a topological pair (X, A) where A ⊆ X. -/
 abbrev ofSubset {X : TopCat.{u}} (A : Set X) : TopPair.{u} := TopPair.of (A := (TopCat.of A))
   (X := X) (TopCat.ofHom { toFun := Subtype.val }) Topology.IsEmbedding.subtypeVal
+
+def ofSubsetRangeIso (Xₚ : TopPair.{u}) : ofSubset (Set.range Xₚ.map) ≅ Xₚ := sorry
 
 /-- Constructs the topological pair `(X, ∅)` from `X : TopCat`. -/
 abbrev ofTopCat (X : TopCat.{u}) : TopPair.{u} :=
@@ -107,12 +109,19 @@ lemma proj₂_obj (X : TopPair) : proj₂.obj X = X.snd := rfl
 @[simp]
 lemma proj₂_map (f : X ⟶ Y) : proj₂.map f = Hom.snd f := rfl
 
+-- simps generates the wrong lemmas
+@[simp]
+lemma proj₂_op_obj (X : TopPairᵒᵖ) : (proj₂.op.obj X) = op X.unop.snd := rfl
+
+@[simp]
+lemma proj₂_op_map {X Y : TopPairᵒᵖ} (f : X ⟶ Y) : (proj₂.op.map f) = (Hom.snd f.unop).op := rfl
+
 /-- The inclusion functor from topological spaces to topological pairs that sends a space X to
 (X, ∅). -/
 @[simps]
 def incl : TopCat.{u} ⥤ TopPair.{u} where
   obj X := ofTopCat X
-  map f := TopPair.ofHom f (𝟙 _) <| by ext x; induction x
+  map f := ofHom f (𝟙 _) <| by ext x; induction x
 
 /-- The functor from topological spaces to topological pairs that sends a space X to the identity
 morphism on X. -/
@@ -136,7 +145,7 @@ def proj₁AdjDiag : proj₁ ⊣ diag where
 
 set_option backward.defeqAttrib.useBackward true in
 /-- The unique morphism (X, ∅) ⟶ (X, A) that is the identity on X. -/
-abbrev j (X : TopPair.{u}) : TopPair.incl.obj X.fst ⟶ X :=
+abbrev inclFst (X : TopPair.{u}) : TopPair.incl.obj X.fst ⟶ X :=
   TopPair.ofHom (𝟙 _) (TopCat.isInitialPEmpty.to _)
 
 /-- A homotopy of maps between topological pairs is a homotopy on the first space and a homotopy on
@@ -156,7 +165,7 @@ attribute [local simp] Homotopy.w Homotopy.w_apply
 namespace Homotopy
 
 @[local simp]
-lemma w_apply' {f g : X ⟶ Y} (H : Homotopy f g) (x : TopPair.snd) (t : unitInterval) :
+lemma w_apply' {f g : X ⟶ Y} (H : Homotopy f g) (x : X.snd) (t : unitInterval) :
     H.fst (t, X.map x) = Y.map (H.snd (t, x)) := by
   have := w_apply H (x, I.homeomorph.symm t)
   cat_disch
@@ -261,5 +270,8 @@ protected structure IsCompl {X A B : TopPair} (f : A ⟶ X) (g : B ⟶ X) where
   snd : TopCat.IsCompl (Hom.snd f) (Hom.snd g)
 
 end Complement
+
+def pairProperty (P : ObjectProperty TopCat.{u}) : ObjectProperty TopPair.{u} := fun Xₚ ↦
+P Xₚ.fst ∧ P Xₚ.snd
 
 end TopPair
