@@ -142,12 +142,11 @@ def hFunctor (i : ι) : HomologyPretheory.{u} C c ⥤ TopCat.{u} ⥤ C where
 instance (f : HP ⟶ HP') [IsIso f] (i : ι) : IsIso (f.hom i) :=
   inferInstanceAs (IsIso ((HomologyPretheory.hFunctor i).map f))
 
---TODO: rename to reflect target categories other than `Ab` (also rename derived names!)
-abbrev coeffGroup [Zero ι] (HP : HomologyPretheory C c) := (HP.H 0).obj (TopCat.of PUnit)
+abbrev coeffObj [Zero ι] (HP : HomologyPretheory C c) := (HP.H 0).obj (TopCat.of PUnit)
 
 section ReducedHomology
 
-variable (HP) [HasKernels C] (i j : ι) (X : TopCat)
+variable (HP) [HasKernels C] (i j : ι) (X : TopCat.{u})
 
 abbrev hToHPUnit := (HP.H i).map (TopCat.isTerminalPUnit.from X)
 
@@ -220,7 +219,7 @@ def hIsoOfHomotopyEquiv (X Y : TopCat.{u}) (e : X ≃ₕ Y) : (HP.H i).obj X ≅
   Functor.mapIso (H HP i) e
 
 abbrev hZeroToCoeffGroup [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) :
-    (HP.H 0).obj X ⟶ HP.coeffGroup := hToHPUnit _ _ _
+    (HP.H 0).obj X ⟶ HP.coeffObj := hToHPUnit _ _ _
 
 instance [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) [ContractibleSpace X] :
     IsIso (hZeroToCoeffGroup HP X) := sorry
@@ -231,7 +230,7 @@ set_option linter.unusedVariables false in
 /-- A `HomologyPretheory` has the excision-isomorphism, if cutting out a sufficiently nice subspace
 `U` from a space `X` yields an isomorphism `Hₚ i X ≅ Hₚ i (X \ U)`. -/
 class HasExcisionIso where
-  [isIso_of_closure_interior_of_isCompl ⦃X U V : TopPair⦄ (f : U ⟶ X) (g : V ⟶ X)
+  [isIso_of_closure_interior_of_isCompl ⦃X U V : TopPair.{u}⦄ (f : U ⟶ X) (g : V ⟶ X)
       (hf : IsEmbedding f) (hg : IsEmbedding g) (hcompl : TopPair.IsCompl f g)
       (hU : closure (Set.range (Hom.fst f)) ⊆ interior (Set.range X.map)) (i : ι) :
       IsIso ((HP.Hₚ i).map g)]
@@ -253,7 +252,7 @@ instance : IsClosedUnderIsomorphisms (hasExcisionIso.{u} C c) where
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Under the assumptions of excision, the map of the pair `U` is an isomorphism. -/
-lemma isIso_of_isCompl_closure ⦃X U V : TopPair⦄ (f : U ⟶ X) (g : V ⟶ X) (hf : IsEmbedding f)
+lemma isIso_of_isCompl_closure ⦃X U V : TopPair.{u}⦄ (f : U ⟶ X) (g : V ⟶ X) (hf : IsEmbedding f)
     (hcompl : TopPair.IsCompl f g)
     (hU : closure (Set.range (Hom.fst f)) ⊆ interior (Set.range X.map)) : IsIso U.map := by
   have surjective_U : Function.Surjective U.map := by
@@ -315,15 +314,15 @@ variable (i j : ι)
 `⋯ ⟶ H (c.next i) X.fst ⟶ Hₚ (c.next i) X) ⟶ H i X.snd ⟶ H i X.fst ⟶ ⋯`. -/
 class HasPairSequence (HP : HomologyPretheory.{u} C c) where
   /-- Exactness of the sequence `H i X.fst ⟶ Hₚ i X ⟶ H j X.snd.` -/
-  exact_pair (HP) (X : TopPair) (i j) (hij : c.Rel i j) :
-      (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) ((HP.δ i j).app _)).Exact := by cat_disch
+  exact_pair (HP) (X : TopPair.{u}) (i j) (hij : c.Rel i j) :
+      (ComposableArrows.mk₂ ((HP.Hₚ i).map X.inclFst) ((HP.δ i j).app _)).Exact := by cat_disch
   /-- Exactness of the sequence `Hₚ i X ⟶ H j X.snd ⟶ H j X.fst`. -/
-  exact_snd (HP) (X : TopPair) (i j) (hij : c.Rel i j) :
+  exact_snd (HP) (X : TopPair.{u}) (i j) (hij : c.Rel i j) :
       (ComposableArrows.mk₂ ((HP.δ i j).app _) ((HP.H j).map X.map)).Exact := by cat_disch
   /-- Exactness of the sequence `H i X.snd ⟶ H i X.fst ⟶ Hₚ i X`. -/
-  exact_fst (HP) (X : TopPair) (i) :
+  exact_fst (HP) (X : TopPair.{u}) (i) :
       (ComposableArrows.mk₂ ((HP.H i).map X.map) ((HP.iso i).hom.app _
-      ≫ (HP.Hₚ i).map X.j)).Exact := by cat_disch
+      ≫ (HP.Hₚ i).map X.inclFst)).Exact := by cat_disch
 
 export HasPairSequence (exact_pair exact_snd exact_fst)
 
@@ -339,8 +338,8 @@ set_option backward.isDefEq.respectTransparency false in
 instance : IsClosedUnderIsomorphisms (hasPairSequence.{u} C c) where
   of_iso {HP HP'} e hPS := {
     exact_pair X i j hij := by
-      let pairSeq := ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) ((HP.δ i j).app X)
-      let pairSeq' := ComposableArrows.mk₂ ((HP'.Hₚ i).map X.j) ((HP'.δ i j).app X)
+      let pairSeq := ComposableArrows.mk₂ ((HP.Hₚ i).map X.inclFst) ((HP.δ i j).app X)
+      let pairSeq' := ComposableArrows.mk₂ ((HP'.Hₚ i).map X.inclFst) ((HP'.δ i j).app X)
       have pairSeqIso : pairSeq ≅ pairSeq' :=
         ComposableArrows.isoMk₂
           (((hₚFunctor _).mapIso e).app _)
@@ -371,9 +370,9 @@ instance : IsClosedUnderIsomorphisms (hasPairSequence.{u} C c) where
       exact ComposableArrows.exact_of_iso pairSeqIso (hPS.exact_snd _ _ _ hij)
     exact_fst X i := by
       let pairSeq := ComposableArrows.mk₂ ((HP.H i).map X.map)
-        ((HP.iso i).hom.app X.fst ≫ (HP.Hₚ i).map X.j)
+        ((HP.iso i).hom.app X.fst ≫ (HP.Hₚ i).map X.inclFst)
       let pairSeq' := ComposableArrows.mk₂ ((HP'.H i).map X.map)
-        ((HP'.iso i).hom.app X.fst ≫ (HP'.Hₚ i).map X.j)
+        ((HP'.iso i).hom.app X.fst ≫ (HP'.Hₚ i).map X.inclFst)
       have pairSeqIso : pairSeq ≅ pairSeq' :=
         ComposableArrows.isoMk₂
           ((proj₂.isoWhiskerLeft ((HP.iso _) ≪≫
@@ -413,19 +412,14 @@ noncomputable def reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
     rfl
   naturality X Y f := sorry
 
-noncomputable abbrev reducedδ.app' (X : TopPair) : (HP.Hₚ i).obj X ⟶ (HP.reducedH j).obj X.snd :=  (HP.reducedδ i j).app X
+lemma hasReducedPairSequence_of_HasPairSequence.exact_pair (HP : HomologyPretheory.{u} C c) (X : TopPair.{u}) (i j) (hij : c.Rel i j) :
+    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.inclFst) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry))).Exact := by cat_disch
 
-@[simp]
-lemma reducedδ_app' (X : TopPair) : reducedδ.app' HP i j X = (HP.reducedδ i j).app X := rfl
-
-lemma hasReducedPairSequence_of_HasPairSequence.exact_pair (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
-    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.j) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry))).Exact := by cat_disch
-
-lemma hasReducedPairSequence_of_HasPairSequence.exact_snd (HP : HomologyPretheory.{u} C c) (X : TopPair) (i j) (hij : c.Rel i j) :
+lemma hasReducedPairSequence_of_HasPairSequence.exact_snd (HP : HomologyPretheory.{u} C c) (X : TopPair.{u}) (i j) (hij : c.Rel i j) :
     (ComposableArrows.mk₂ (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _) (sorry)) ((HP.reducedH j).map X.map)).Exact := by cat_disch
 
-lemma hasReducedPairSequence_of_HasPairSequence.exact_fst (HP : HomologyPretheory.{u} C c) (X : TopPair) (i) :
-    (ComposableArrows.mk₂ ((HP.reducedH i).map X.map) (kernel.ι (hToHPUnit HP i X.fst) ≫ (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.j)).Exact := sorry
+lemma hasReducedPairSequence_of_HasPairSequence.exact_fst (HP : HomologyPretheory.{u} C c) (X : TopPair.{u}) (i) :
+    (ComposableArrows.mk₂ ((HP.reducedH i).map X.map) (kernel.ι (hToHPUnit HP i X.fst) ≫ (HP.iso i).hom.app _ ≫ (HP.Hₚ i).map X.inclFst)).Exact := sorry
 
 end Reduced
 
@@ -468,31 +462,31 @@ instance : IsClosedUnderIsomorphisms (isExtraordinaryEilenbergSteenrod C c)
     hasPairSequence := instIsClosedUnderIsomorphismsHasPairSequence.of_iso e h.hasPairSequence
   }
 
-variable (HP HP' : HomologyPretheory.{u} C (ComplexShape.down ℕ))
+variable [Zero ι] (HP HP' : HomologyPretheory.{u} C c)
 
-/-- A `HomologyPretheory` on `ComplexShape.down ℕ` has the dimension axiom if it is trivial on the
-terminal space for `n > 0`. -/
+/-- A `HomologyPretheory` has the dimension axiom if it is trivial on the
+terminal space for `i ≠ 0`. -/
 class HasDimensionAxiom where
-  isZero_PUnit_of_gt_zero : ∀ (n : ℕ) [NeZero n], IsZero ((HP.H n).obj (TopCat.of PUnit)) :=
+  isZero_PUnit_of_NeZero : ∀ (i : ι) [NeZero i], IsZero ((HP.H i).obj (TopCat.of PUnit)) :=
     by cat_disch
 
-export HasDimensionAxiom (isZero_PUnit_of_gt_zero)
+export HasDimensionAxiom (isZero_PUnit_of_NeZero)
 
 variable (C) in
 /-- An abbreviation for `HomologyPretheory.HasDimensionAxiom` as `ObjectProperty`. -/
-abbrev hasDimensionAxiom : ObjectProperty (HomologyPretheory.{u} C (ComplexShape.down ℕ)) :=
+abbrev hasDimensionAxiom : ObjectProperty (HomologyPretheory.{u} C c) :=
   HasDimensionAxiom
 
 @[simp]
 lemma hasDimensionAxiom_iff : hasDimensionAxiom C HP ↔ HP.HasDimensionAxiom := .rfl
 
-instance : IsClosedUnderIsomorphisms (hasDimensionAxiom.{u} C) where
+instance : IsClosedUnderIsomorphisms (C := HomologyPretheory C c) (hasDimensionAxiom.{u} C) where
   of_iso {HP HP'} e h := ⟨fun n ↦ (Iso.isZero_iff (((HP.iso _) ≪≫ Functor.isoWhiskerLeft incl
     ((hₚFunctor _).mapIso e) ≪≫ (HP'.iso _).symm).app
-    (TopCat.of PUnit))).mp (h.isZero_PUnit_of_gt_zero n)⟩
+    (TopCat.of PUnit))).mp (h.isZero_PUnit_of_NeZero n)⟩
 
-instance [HasKernels C] [HasDimensionAxiom HP] {n : ℕ} [NeZero n] (X : TopCat.{u}) :
-    IsIso ((reducedHToH HP n).app X) := sorry
+instance [HasKernels C] [HasDimensionAxiom HP] {i : ι} [NeZero i] (X : TopCat.{u}) :
+    IsIso ((reducedHToH HP i).app X) := sorry
 
 /-- An Eilenberg-Steenrod homology theory is an extraordinary Eilenberg-Steenrod homology theory
 which additionally satisfies the dimension axiom. -/
@@ -504,17 +498,17 @@ attribute [instance] IsEilenbergSteenrod.hasDimensionAxiom
 
 variable (C) in
 /-- An abbreviation for `HomologyPretheory.HasPairSequence` as `ObjectProperty`. -/
-abbrev isEilenbergSteenrod : ObjectProperty (HomologyPretheory.{u} C (ComplexShape.down ℕ)) :=
+abbrev isEilenbergSteenrod : ObjectProperty (HomologyPretheory.{u} C c) :=
   IsEilenbergSteenrod
 
 @[simp]
 lemma isEilenbergSteenrod_iff : isEilenbergSteenrod C HP ↔ HP.IsEilenbergSteenrod := .rfl
 
-instance : IsClosedUnderIsomorphisms (isEilenbergSteenrod.{u} C) where
+instance : IsClosedUnderIsomorphisms (C := HomologyPretheory C c) (isEilenbergSteenrod.{u} C) where
   of_iso e h := {
     1 := instIsClosedUnderIsomorphismsIsExtraordinaryEilenbergSteenrod.of_iso e h.1
     hasDimensionAxiom :=
-      instIsClosedUnderIsomorphismsNatDownHasDimensionAxiom.of_iso e h.hasDimensionAxiom
+      instIsClosedUnderIsomorphismsHasDimensionAxiom.of_iso e h.hasDimensionAxiom
   }
 
 end HomologyPretheory
