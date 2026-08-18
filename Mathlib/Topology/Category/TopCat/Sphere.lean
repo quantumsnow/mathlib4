@@ -81,7 +81,7 @@ def ballInclusion (n : ℕ) : 𝔹 n ⟶ 𝔻 n :=
         rw [isOpen_induced_iff, ← hst, ← hrs]
         tauto⟩ }
 
-def diskCenterInclusion : of PUnit ⟶ 𝔻 n :=
+def diskCenterInclusion (n : ℕ) : of PUnit ⟶ 𝔻 n :=
   ofHom (ContinuousMap.const _ ⟨0, by simp⟩)
 
 noncomputable def southpoleInclusion : (n : ℕ) → of PUnit ⟶ 𝕊 n -- TODO: do this without lift first
@@ -89,12 +89,12 @@ noncomputable def southpoleInclusion : (n : ℕ) → of PUnit ⟶ 𝕊 n -- TODO
   | n + 1 => sorry
 
 /-- The inclusion of the disk into the sphere as the southern hemisphere. -/
-def diskInclusionSphere : 𝔻 n ⟶ 𝕊 n := sorry
+def diskInclusionSphere (n : ℕ) : 𝔻 n ⟶ 𝕊 n := sorry
 
 /-- The inclusion of the punctured disk into the (southern) punctured sphere as the southern hemisphere. -/
-def puncturedDiskInclusionPuncturedSphere : 𝔻* n ⟶ 𝕊* n := sorry
+def puncturedDiskInclusionPuncturedSphere (n : ℕ) : 𝔻* n ⟶ 𝕊* n := sorry
 
-def southernPuncturedSphereInclusionSphere : 𝕊* n ⟶ 𝕊 n := sorry
+def southernPuncturedSphereInclusionSphere (n : ℕ) : 𝕊* n ⟶ 𝕊 n := sorry
 
 set_option backward.isDefEq.respectTransparency false in
 instance {n : ℕ} : Mono (diskBoundaryInclusion n) := mono_iff_injective _ |>.mpr <| by
@@ -103,11 +103,11 @@ instance {n : ℕ} : Mono (diskBoundaryInclusion n) := mono_iff_injective _ |>.m
   congr
 
 set_option backward.isDefEq.respectTransparency false in
-lemma isEmbedding_diskBoundaryInclusion : Topology.IsEmbedding (diskBoundaryInclusion n) where
+lemma isEmbedding_diskBoundaryInclusion (n : ℕ) : Topology.IsEmbedding (diskBoundaryInclusion n) where
   toIsInducing := sorry
   injective := (TopCat.mono_iff_injective _).mp inferInstance
 
-lemma isEmbedding_southernPuncturedSphereInclusionSphere : Topology.IsEmbedding (southernPuncturedSphereInclusionSphere n) := sorry
+lemma isEmbedding_southernPuncturedSphereInclusionSphere (n : ℕ) : Topology.IsEmbedding (southernPuncturedSphereInclusionSphere n) := sorry
 
 set_option backward.isDefEq.respectTransparency false in
 instance {n : ℕ} : Mono (ballInclusion n) := TopCat.mono_iff_injective _ |>.mpr <| by

@@ -244,7 +244,7 @@ end Reduced
 /-- The map `H 0 (𝕊 n) ⟶ coeffObj` for `n ≠ 0`. -/
 noncomputable def hZeroSphereToCoeffObj [NeZero n] :
     (HP.H 0).obj (𝕊 n) ⟶ HP.coeffObj :=
-  (asIso (hIsoReducedHBiprod HP 0 (𝕊 n))).hom ≫
+  (hIsoReducedHBiprod HP 0 (𝕊 n)).hom ≫
     (isoZeroBiprod (isZero_reducedHSphere_of' HP n 0)).inv
 
 /-- The map `H 0 (𝕊 n) ⟶ coeffObj` is an isomorphism for `n ≠ 0`. -/
