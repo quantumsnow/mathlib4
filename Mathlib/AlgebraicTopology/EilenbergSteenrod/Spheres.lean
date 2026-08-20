@@ -59,39 +59,45 @@ noncomputable def sphereZeroCofan := BinaryCofan.mk ptInclSphereZeroPos.{u} ptIn
 /-- The coproduct cofan of `𝕊 0` is a colimit. -/
 def isColimitSphereZero : IsColimit sphereZeroCofan := sorry
 
-/-- The image of the coproduct cofan of `𝕊 0` under `0`th homology. -/
-noncomputable def hZeroSphereZeroCocone :
-    Cocone (pair (of PUnit) (of PUnit) ⋙ HP.H 0) :=
-  (HP.H 0).mapCocone sphereZeroCofan
+/-- The image of the coproduct cofan of `𝕊 0` under homology. -/
+noncomputable def hSphereZeroCocone :
+    Cocone (pair (of PUnit) (of PUnit) ⋙ HP.H n) :=
+  (HP.H _).mapCocone sphereZeroCofan
 
-/-- The image of the coproduct cofan of `𝕊 0` under `0`th homology is a colimit. -/
-noncomputable def isColimitHZeroSphereZeroCocone :
-    IsColimit (hZeroSphereZeroCocone HP) :=
+/-- The image of the coproduct cofan of `𝕊 0` under homology is a colimit. -/
+noncomputable def isColimitHSphereZeroCocone :
+    IsColimit (hSphereZeroCocone HP n) :=
   ((IsAdditive.preserves_coproducts_of_small _ _ _).preservesColimit.preserves
     isColimitSphereZero).some
 
-/-- The image of the coproduct cofan of `𝕊 0` under `0`th homology as a cofan on `H 0 ∗`. -/
-noncomputable def hZeroSphereZeroCofan :
-    BinaryCofan (HP.coeffObj) (HP.coeffObj) :=
-  (Cocone.precomposeEquivalence (pairComp (of PUnit) (of PUnit) (HP.H 0))).functor.obj
-    ((HP.H 0).mapCocone sphereZeroCofan)
+/-- The image of the coproduct cofan of `𝕊 0` under `n`th homology as a cofan on `H n ∗`. -/
+noncomputable def hSphereZeroCofan :
+    BinaryCofan ((HP.H n).obj (TopCat.of PUnit)) ((HP.H n).obj (TopCat.of PUnit)) :=
+  (Cocone.precomposeEquivalence (pairComp (of PUnit) (of PUnit) (HP.H _))).functor.obj
+    ((HP.H _).mapCocone sphereZeroCofan)
 
-/-- The image of the coproduct cofan of `𝕊 0` under `0`th homology as a cofan on `H 0 ∗` is a
+/-- The image of the coproduct cofan of `𝕊 0` under `n`th homology as a cofan on `H n ∗` is a
 colimit. -/
 noncomputable def isColimitHZeroSphereZeroCofan :
-    IsColimit (hZeroSphereZeroCofan HP) :=
-  IsColimit.equivOfNatIsoOfIso _ _ _ (Iso.refl _) (isColimitHZeroSphereZeroCocone HP)
+    IsColimit (hSphereZeroCofan HP n) :=
+  IsColimit.equivOfNatIsoOfIso _ _ _ (Iso.refl _) (isColimitHSphereZeroCocone HP n)
 
-/-- The universal map `H 0 (𝕊 0) ⟶ (HP.coeffObj) ⊞ (HP.coeffObj)` induced by the coproduct
+/-- The universal map `H n (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` induced by the coproduct
 `H 0 (𝕊 0)`. -/
 noncomputable def hZeroSphereZeroToCoeffObjBiprod :
-    (HP.H 0).obj (𝕊 0) ⟶ (HP.coeffObj) ⊞ (HP.coeffObj) :=
-  (isColimitHZeroSphereZeroCofan _).desc (BinaryBiproduct.bicone _ _).toCocone
+    (HP.H n).obj (𝕊 0) ⟶ ((HP.H n).obj (TopCat.of PUnit)) ⊞ ((HP.H n).obj (TopCat.of PUnit)) :=
+  (isColimitHZeroSphereZeroCofan _ _).desc (BinaryBiproduct.bicone _ _).toCocone
 
-/-- The universal map `H 0 (𝕊 0) ⟶ (HP.coeffObj) ⊞ (HP.coeffObj)` is an isomorphism. -/
-instance : IsIso (hZeroSphereZeroToCoeffObjBiprod HP) :=
-  (isColimitHZeroSphereZeroCofan _).nonempty_isColimit_iff_isIso_desc.mp
+/-- The universal map `H 0 (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` is an isomorphism. -/
+instance : IsIso (hZeroSphereZeroToCoeffObjBiprod HP n) :=
+  (isColimitHZeroSphereZeroCofan _ _).nonempty_isColimit_iff_isIso_desc.mp
     ⟨(BinaryBiproduct.isColimit _ _)⟩
+
+/-- For `n ≠ 0`, `H n (𝕊 0)` is trivial. -/
+def isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
+  IsZero.of_iso ((CategoryTheory.Limits.biprod_isZero_iff _ _).mpr
+    ⟨(HP.isZero_PUnit_of_gt_zero _), (HP.isZero_PUnit_of_gt_zero _)⟩)
+    (asIso (hZeroSphereZeroToCoeffObjBiprod _ _))
 
 section Reduced
 
