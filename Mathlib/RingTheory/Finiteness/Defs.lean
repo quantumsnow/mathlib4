@@ -147,6 +147,11 @@ variable {R M N}
 lemma exists_fin [Module.Finite R M] : ∃ (n : ℕ) (s : Fin n → M), span R (range s) = ⊤ :=
   fg_iff_exists_fin_generating_family.mp fg_top
 
+instance : Module.Finite R PUnit where
+  fg_top := by
+    use Finset.univ
+    aesop
+
 end Finite
 
 end Module
