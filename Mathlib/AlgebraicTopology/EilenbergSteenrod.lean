@@ -161,12 +161,11 @@ noncomputable def reducedH : TopCat.{u} ⥤ C where
 
 noncomputable def reducedHToH : HP.reducedH i ⟶ HP.H i where
   app X := kernel.ι _
-  naturality := sorry -- TODO: this used to be automatic. why not anymore?
+  naturality := sorry
 
 noncomputable def reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
   (reducedHToH HP _).app _ ≫ hToHPUnit HP _ _
 
- --TODO: can make this natural transformation?
 def hToReducedHBiprod [HasBinaryBiproducts C] :
     (HP.H i).obj X ⟶ (HP.reducedH i).obj X ⊞ (HP.H i).obj (TopCat.of PUnit) := sorry
 
