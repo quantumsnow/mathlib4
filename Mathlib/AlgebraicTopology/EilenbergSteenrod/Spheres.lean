@@ -213,7 +213,9 @@ instance : (n : ℕ) → IsIso (reducedHSphereToReducedHSphereZero HP k n)
 
 /-- For `k ≠ 0`, `reducedH (k + n) (𝕊 n)` is trivial. -/
 lemma isZero_reducedHSphere_of'' [NeZero k] : (n : ℕ) → IsZero ((HP.reducedH (k + n)).obj (𝕊 n))
-  | 0 => sorry
+  | 0 =>
+      have : Mono (HP.hToHPUnit k (𝕊 0)) := IsZero.mono (isZero_hSphereZero_of _ _) _
+      isZero_kernel_of_mono _
   | _ + 1 => IsZero.of_iso (isZero_reducedHSphere_of'' 0)
       (asIso (reducedHSphereToReducedHSphereZero _ _ _))
 
