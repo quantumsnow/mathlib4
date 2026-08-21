@@ -170,6 +170,10 @@ lemma toSkeleton_eq_iff {X : C} {Y : Skeleton C} :
     toSkeleton X = Y ↔ Nonempty (X ≅ (fromSkeleton C).obj Y) :=
   Quotient.mk_eq_iff_out
 
+instance {C : Type*} [Category C] [Zero C] : Zero (Skeleton C) := instZeroQuot_mathlib
+
+noncomputable instance {C : Type*} [Category C] [Add C] : Add (Skeleton C) := instAddQuot_mathlib
+
 namespace Functor
 
 /-- From a functor `C ⥤ D`, construct a map of skeletons `Skeleton C → Skeleton D`. -/
