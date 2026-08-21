@@ -780,3 +780,9 @@ end Quotient
 lemma Equivalence.quot_mk_eq_iff {α : Type*} {r : α → α → Prop} (h : Equivalence r) (x y : α) :
     Quot.mk r x = Quot.mk r y ↔ r x y :=
   Quotient.eq (r := ⟨r, h⟩)
+
+instance {α : Type*} {r : α → α → Prop} [Zero α] : Zero (Quot r) where
+  zero := Quot.mk _ Zero.zero
+
+noncomputable instance {α : Type*} {r : α → α → Prop} [Add α] : Add (Quot r) where
+  add X Y := Quot.mk _ (Quot.out X + Quot.out Y)
