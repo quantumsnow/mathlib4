@@ -84,12 +84,12 @@ noncomputable def isColimitHZeroSphereZeroCofan :
 
 /-- The universal map `H n (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` induced by the coproduct
 `H 0 (𝕊 0)`. -/
-noncomputable def hSphereZeroToCoeffObjBiprod :
+noncomputable def hSphereZeroToHPUnitBiprod :
     (HP.H n).obj (𝕊 0) ⟶ ((HP.H n).obj (TopCat.of PUnit)) ⊞ ((HP.H n).obj (TopCat.of PUnit)) :=
   (isColimitHZeroSphereZeroCofan _ _).desc (BinaryBiproduct.bicone _ _).toCocone
 
 /-- The universal map `H 0 (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` is an isomorphism. -/
-instance : IsIso (hSphereZeroToCoeffObjBiprod HP n) :=
+instance : IsIso (hSphereZeroToHPUnitBiprod HP n) :=
   (isColimitHZeroSphereZeroCofan _ _).nonempty_isColimit_iff_isIso_desc.mp
     ⟨(BinaryBiproduct.isColimit _ _)⟩
 
@@ -97,7 +97,7 @@ instance : IsIso (hSphereZeroToCoeffObjBiprod HP n) :=
 def isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
   IsZero.of_iso ((CategoryTheory.Limits.biprod_isZero_iff _ _).mpr
     ⟨(HP.isZero_PUnit_of_gt_zero _), (HP.isZero_PUnit_of_gt_zero _)⟩)
-    (asIso (hSphereZeroToCoeffObjBiprod _ _))
+    (asIso (hSphereZeroToHPUnitBiprod _ _))
 
 section Reduced
 
