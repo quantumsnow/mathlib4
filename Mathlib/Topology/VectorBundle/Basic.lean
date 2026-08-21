@@ -362,6 +362,12 @@ class VectorBundle : Prop where
       ContinuousOn (fun b => Trivialization.coordChangeL R e e' b : B → F →L[R] F)
         (e.baseSet ∩ e'.baseSet)
 
+/-- A morphism of vector bundles is a continuous map on the base and a linear map on each fiber. -/
+structure VectorBundle.Hom {B' : Type*} [TopologicalSpace B'] (E' : B' → Type*)
+    [(x : B') → AddCommMonoid (E' x)] [(x : B') → Module R (E' x)] where
+  homProj : C(B, B')
+  homSnd (b : B) : E b →ₗ[R] E' (homProj b)
+
 variable {F E}
 
 instance (priority := 100) trivialization_linear [VectorBundle R F E] (e : Trivialization F (π F E))
