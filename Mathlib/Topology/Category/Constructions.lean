@@ -43,7 +43,6 @@ noncomputable def adjoinPoint : TopCat.{u} ⥤ TopCat.Pointed.{u} where
   obj X := ⟨X ⨿ (TopCat.of PUnit), coprod.inr (X := X) PUnit.unit⟩
   map f := ⟨coprod.map f (𝟙 _), sorry⟩
 
--- TODO: use `HomotopicalAlgebra.Cylinder`?
 /-- The cylinder of a topological space `X` is `X × I`. -/
 def cylinder : TopCat.{u} ⥤ TopCat.{u} where
   obj X := X ⊗ I
@@ -134,7 +133,7 @@ noncomputable def suspension.out : cylinder ⟶ suspension ⋙ Pointed.forget wh
   naturality X Y f := sorry
 
 /-- The natural isomorphism `CX/X ≅ SX`. -/
-def cone.pairQuotientIso : cone.pair ⋙ quotient ≅ suspension := sorry -- TODO: data
+def cone.pairQuotientIso : cone.pair ⋙ quotient ≅ suspension := sorry
 
 /-- The mapping cone of a map `f : Y ⟶ X` is the gluing of the cone `CY` to `X` along `f`. We will
 often denote this by `X ∪ CY`. -/
@@ -156,7 +155,7 @@ noncomputable def codomPair : Arrow TopCat.{u} ⥤ TopPair.{u} where
   map f := TopPair.ofHom (mappingCone.map f) f.right
 
 /-- The natural isomorphism `(X ∪ CY)/X ≅ SY`. -/
-def codomPairQuotientIso : codomPair ⋙ quotient ≅ Arrow.leftFunc ⋙ suspension := sorry -- TODO: data
+def codomPairQuotientIso : codomPair ⋙ quotient ≅ Arrow.leftFunc ⋙ suspension := sorry
 
 /-- The inclusion of the cone `CY` into the mapping cone `X ∪ CY`. -/
 noncomputable def coneIncl : Arrow.leftFunc ⋙ cone ⋙ TopCat.Pointed.forget ⟶ mappingCone where

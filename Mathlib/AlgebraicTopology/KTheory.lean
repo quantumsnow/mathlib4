@@ -5,9 +5,11 @@ Authors: Jakob Scharmberg
 -/
 module
 
-public import Mathlib
-public import Mathlib.Topology.VectorBundle.Category
+public import Mathlib.Algebra.Category.Grp.Limits
+public import Mathlib.AlgebraicTopology.EilenbergSteenrod
+public import Mathlib.GroupTheory.MonoidLocalization.GrothendieckGroup
 public import Mathlib.Topology.Category.Constructions
+public import Mathlib.Topology.VectorBundle.Category
 
 /-!
 # Topological K-theory

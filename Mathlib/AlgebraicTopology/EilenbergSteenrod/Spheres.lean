@@ -96,7 +96,7 @@ instance : IsIso (hSphereZeroToHPUnitBiprod HP n) :=
 /-- For `n ≠ 0`, `H n (𝕊 0)` is trivial. -/
 lemma isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
   IsZero.of_iso ((biprod_isZero_iff _ _).mpr
-    ⟨(HP.isZero_PUnit_of_gt_zero _), (HP.isZero_PUnit_of_gt_zero _)⟩)
+    ⟨(HP.isZero_PUnit_of_NeZero _), (HP.isZero_PUnit_of_NeZero _)⟩)
     (asIso (hSphereZeroToHPUnitBiprod _ _))
 
 section Reduced
@@ -115,7 +115,7 @@ noncomputable abbrev diskSpherePair :=
 /-- The canonical map `reducedH m (𝕊 n) ⟶ H m (𝕊 n, 𝔻 n)`. -/
 noncomputable def reducedHSphereToHₚSphereDiskPair :
     (HP.reducedH m).obj (𝕊 n) ⟶ (HP.Hₚ m).obj (sphereDiskPair n) :=
-  kernel.ι _ ≫ (HP.iso _).hom.app _ ≫ (HP.Hₚ _).map (sphereDiskPair _).j
+  kernel.ι _ ≫ (HP.iso _).hom.app _ ≫ (HP.Hₚ _).map (sphereDiskPair _).inclFst
 
 /-- The canonical map `reducedH m (𝕊 n) ⟶ H m (𝕊 n, 𝔻 n)` is an isomorphism. -/
 instance : IsIso (reducedHSphereToHₚSphereDiskPair HP m n) := sorry

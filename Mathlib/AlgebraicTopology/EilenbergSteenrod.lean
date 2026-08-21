@@ -39,10 +39,9 @@ that under these assumptions, `U` is actually an isomorphism.
 Most significant gaps/`sorry`s:
 * `hIsoReducedHBiprod`: construct the isomorphism `H i X ≅ reducedH i X ⊞ H i ∗`
 * If `X` is contractible, the induced map `H 0 X ⟶ H 0 ∗` is an isomorphism.
-* `isZeroHₚDiagOfHasPairSequence`: if a homology theory has an exact pair sequence, `H m (X, X)` is
+* `isZeroHₚDiagOfHasPairSequence`: if a (co)homology theory has an exact pair sequence, `H m (X, X)` is
   trivial
-* `has_reduced_pair_sequence_exact_pair`, `has_reduced_pair_sequence_exact_snd`,
-`has_reduced_pair_sequence_exact_fst`: exactness of the long exact sequence in reduced homology
+* `has_reduced_pair_sequence_exact_fst`: exactness of the long exact sequence in reduced homology
 * For a homology theory with the dimension axiom and `m ≠ 0`, the inclusion `reducedH m X → H m X`
   is an isomorphism.
 -/
@@ -178,13 +177,9 @@ noncomputable def reducedHToH : HP.reducedH i ⟶ HP.H i where
   app X := kernel.ι _
   naturality := sorry
 
-noncomputable def reducedHToHPUnit : (HP.reducedH i).obj X ⟶ (HP.H i).obj (TopCat.of PUnit) :=
-  (reducedHToH HP _).app _ ≫ hToHPUnit HP _ _
-
 /-- The isomorphism `H i X ≅ reducedH i X ⊞ H i ∗` -/
 def hIsoReducedHBiprod [HasBinaryBiproducts C] :
     (HP.H i).obj X ≅ (HP.reducedH i).obj X ⊞ (HP.H i).obj (TopCat.of PUnit) := sorry
-  naturality := sorry
 
 end ReducedHomology
 
@@ -217,26 +212,29 @@ open Homotopic
 
 variable [IsHomotopyInvariant HP]
 
-/-- If a `HomologyPretheory` is homotopy-invariant, it induces a functor from the homotopy category of `TopPair`. -/
+/-- If a `HomologyPretheory` is homotopy-invariant, it induces a functor from the homotopy category
+of `TopPair`. -/
 def homotopyHₚ : TopPairHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopPair.Homotopic.homRel
   (HP.Hₚ i) <| fun _ _ _ _ h ↦ HP.map_eq_of_homotopy h.some _
 
 lemma quotient_Hₚ_eq : Quotient.functor _ ⋙ (homotopyHₚ HP i) = HP.Hₚ i :=
   Quotient.lift_spec _ _ _
 
-/-- If a `HomologyPretheory` is homotopy invariant, it maps homotopy equivalences to isomorphisms. -/
+/-- If a `HomologyPretheory` is homotopy invariant, it maps homotopy equivalences to isomorphisms.
+-/
 def hₚIsoOfHomotopyEquiv {X Y : TopPair.{u}} (e : X ≃ₕ Y) : (HP.Hₚ i).obj X ≅ (HP.Hₚ i).obj Y :=
   (homotopyHₚ HP i).mapIso e
 
-def H : TopHomotopyCat.{u} ⥤ C := CategoryTheory.Quotient.lift TopCat.Homotopic.homRel (HP.H i) sorry
+/-- For a homotopy-invariant `HomologyPretheory`, this is the induced homology functor on the
+homotopy category. -/
+def H : TopHomotopyCat.{u} ⥤ C :=
+  CategoryTheory.Quotient.lift TopCat.Homotopic.homRel (HP.H i) sorry
 
 lemma quotient_H_eq : Quotient.functor _ ⋙ (H HP i) = HP.H i := Quotient.lift_spec _ _ _
 
+/-- A homotopy-invariant `HomologyPretheory` maps a homotopy equivalence to an isomorphism. -/
 def hIsoOfHomotopyEquiv (X Y : TopCat.{u}) (e : X ≃ₕ Y) : (HP.H i).obj X ≅ (HP.H i).obj Y :=
   Functor.mapIso (H HP i) e
-
-abbrev hZeroToCoeffGroup [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) :
-    (HP.H 0).obj X ⟶ HP.coeffObj := hToHPUnit _ _ _
 
 /-- If `X` is contractible, the induced map `H 0 X ⟶ H 0 ∗` is an isomorphism. -/
 instance [Zero ι] (HP : HomologyPretheory C c) (X : TopCat.{u}) [ContractibleSpace X] :
@@ -433,8 +431,8 @@ noncomputable def reducedδ : (HP.Hₚ i) ⟶ proj₂ ⋙ HP.reducedH j where
 
 lemma has_reduced_pair_sequence_exact_pair
       (X : TopPair) (i j) (hij : c.Rel i j) :
-    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.inclFst) (kernel.lift (hToHPUnit HP j X.snd) ((HP.δ i j).app _)
-      sorry)).Exact := by cat_disch
+    (ComposableArrows.mk₂ ((HP.Hₚ i).map X.inclFst) (kernel.lift (hToHPUnit HP j X.snd)
+      ((HP.δ i j).app _) sorry)).Exact := by cat_disch
 
 lemma has_reduced_pair_sequence_exact_snd
       (X : TopPair) (i j) (hij : c.Rel i j) :
@@ -538,7 +536,9 @@ instance : IsClosedUnderIsomorphisms (C := HomologyPretheory C c) (isEilenbergSt
 
 end HomologyPretheory
 
--- TODO: make this the dual of `HomologyPretheory`. At this time, `to_dual` does not support dualizing `TopPair.{u}ᵒᵖ ⥤ C` to `TopPair.{u} ⥤ C`.
+-- TODO: make this the dual of `HomologyPretheory`. At this time, `to_dual` does not support
+-- dualizing `TopPair.{u}ᵒᵖ ⥤ C` to `TopPair.{u} ⥤ C`.
+/-- A `CohomologyPretheory` is the data of an Eilenberg-Steenrod cohomology theory. -/
 structure CohomologyPretheory
     (C : Type*) [Category* C] [HasZeroMorphisms C] {ι : Type*} (c : ComplexShape ι) where
   mkₚ ::
@@ -557,7 +557,8 @@ namespace CohomologyPretheory
 
 /-- A morphism in the category `CohomologyPretheory`. -/
 @[ext]
-structure Hom {C : Type*} [Category* C] [HasZeroMorphisms C] {ι : Type*} {c : ComplexShape ι} (HP HP' : CohomologyPretheory.{u} C c) where
+structure Hom {C : Type*} [Category* C] [HasZeroMorphisms C] {ι : Type*} {c : ComplexShape ι}
+    (HP HP' : CohomologyPretheory.{u} C c) where
   /-- The natural transformation of relative homology functors in a morphism of
   `CohomologyPretheory`s. -/
   homₚ (i : ι) : HP.Hₚ i ⟶ HP'.Hₚ i
@@ -586,10 +587,10 @@ variable {HP HP' : CohomologyPretheory.{u} C c}
 -- TODO: generate this with `@[to_app]`
 @[reassoc]
 lemma Hom.iso_comm_app (f : HP ⟶ HP') (i : ι) (X : TopCat.{u}ᵒᵖ) :
-    (HP.iso i).hom.app X ≫ (f.homₚ i).app (op (ofTopCat X.unop)) = (f.hom i).app X ≫ (HP'.iso i).hom.app X :=
+    (HP.iso i).hom.app X ≫ (f.homₚ i).app (op (ofTopCat X.unop)) =
+      (f.hom i).app X ≫ (HP'.iso i).hom.app X :=
   congr($(f.iso_comm _).app _)
 
--- TODO: should turn around `CohomologyPretheory.iso` instead?
 @[reassoc]
 lemma Hom.iso_comm' (f : HP ⟶ HP') (i : ι) :
   incl.op.whiskerLeft (f.homₚ i) ≫ (HP'.iso i).inv = (HP.iso i).inv ≫ f.hom i := sorry
@@ -597,7 +598,8 @@ lemma Hom.iso_comm' (f : HP ⟶ HP') (i : ι) :
 -- TODO: generate this with `@[to_app]`
 @[reassoc]
 lemma Hom.iso_comm_app' (f : HP ⟶ HP') (i : ι) (X : TopCat.{u}ᵒᵖ) :
-  (f.homₚ i).app (op (ofTopCat X.unop)) ≫ (HP'.iso i).inv.app X = (HP.iso i).inv.app X ≫ (f.hom i).app X := congr($(f.iso_comm' _).app _)
+  (f.homₚ i).app (op (ofTopCat X.unop)) ≫ (HP'.iso i).inv.app X =
+    (HP.iso i).inv.app X ≫ (f.hom i).app X := congr($(f.iso_comm' _).app _)
 
 -- TODO: generate this with `@[to_app]`
 @[reassoc]
@@ -612,7 +614,8 @@ lemma iso_homₚ_inv_hom (f : HP ⟶ HP') (i : ι) :
 -- TODO: generate this with `@[to_app]`
 @[reassoc (attr := simp)]
 lemma iso_homₚ_inv_hom_app (f : HP ⟶ HP') (i : ι) (X : TopCat.{u}ᵒᵖ) :
-    (HP.iso i).hom.app X ≫ (f.homₚ i).app (op (ofTopCat X.unop)) ≫ (HP'.iso i).inv.app X = (f.hom i).app X :=
+    (HP.iso i).hom.app X ≫ (f.homₚ i).app (op (ofTopCat X.unop)) ≫ (HP'.iso i).inv.app X =
+      (f.hom i).app X :=
   congr($(iso_homₚ_inv_hom _ _).app _)
 
 @[reassoc (attr := simp)]
@@ -623,7 +626,8 @@ lemma inv_hom_iso_homₚ (f : HP ⟶ HP') (i : ι) :
 -- TODO: generate this with `@[to_app]`
 @[reassoc (attr := simp)]
 lemma inv_hom_iso_homₚ_app (f : HP ⟶ HP') (i : ι) (X : TopCat.{u}ᵒᵖ) :
-    (HP.iso i).inv.app X ≫ (f.hom i).app X ≫ (HP'.iso i).hom.app X = (f.homₚ i).app (op (ofTopCat X.unop)) :=
+    (HP.iso i).inv.app X ≫ (f.hom i).app X ≫ (HP'.iso i).hom.app X =
+      (f.homₚ i).app (op (ofTopCat X.unop)) :=
   congr($(inv_hom_iso_homₚ _ _).app _)
 
 /-- The forgetful functor that sends a `CohomologyPretheory` to it's relative homology functor `Hₚ`.
@@ -645,21 +649,13 @@ def hFunctor (i : ι) : CohomologyPretheory.{u} C c ⥤ TopCat.{u}ᵒᵖ ⥤ C w
 instance (f : HP ⟶ HP') [IsIso f] (i : ι) : IsIso (f.hom i) :=
   inferInstanceAs (IsIso ((CohomologyPretheory.hFunctor i).map f))
 
---TODO: rename to reflect target categories other than `Ab` (also rename derived names!)
-abbrev coeffGroup [Zero ι] (HP : CohomologyPretheory C c) := (HP.H 0).obj (op (TopCat.of PUnit))
-
-section ReducedCohomology
-
-variable (HP) [HasKernels C] (i j : ι) (X : TopCat.{u}ᵒᵖ)
-
-abbrev hToHPUnit := (HP.H i).map (TopCat.isTerminalPUnit.from X.unop).op
-
-end ReducedCohomology
+/-- The coefficient object of a cohomology theory is `H 0 ∗`. -/
+abbrev coeffObj [Zero ι] (HP : CohomologyPretheory C c) := (HP.H 0).obj (op (TopCat.of PUnit))
 
 variable (HP HP' : CohomologyPretheory.{u} C c) (i : ι)
 
-/-- A `CohomologyPretheory` is homotopy-invariant if its homology functor `Hₚ` takes homotopic maps to
-the same map in homology -/
+/-- A `CohomologyPretheory` is homotopy-invariant if its homology functor `Hₚ` takes homotopic maps
+to the same map in homology -/
 class IsHomotopyInvariant (HP : CohomologyPretheory.{u} C c) where
   map_eq_of_homotopy (HP) {X Y : TopPair.{u}ᵒᵖ} {f g : X ⟶ Y} (F : Homotopy f.unop g.unop) (i : ι) :
     (HP.Hₚ i).map f = (HP.Hₚ i).map g := by cat_disch
@@ -680,8 +676,8 @@ instance : IsClosedUnderIsomorphisms (isHomotopyInvariant.{u} C c) where
       map_eq_of_homotopy _ F _]⟩
 
 set_option linter.unusedVariables false in
-/-- A `CohomologyPretheory` has the excision-isomorphism, if cutting out a sufficiently nice subspace
-`U` from a space `X` yields an isomorphism `Hₚ i X ≅ Hₚ i (X \ U)`. -/
+/-- A `CohomologyPretheory` has the excision-isomorphism, if cutting out a sufficiently nice
+subspace `U` from a space `X` yields an isomorphism `Hₚ i X ≅ Hₚ i (X \ U)`. -/
 class HasExcisionIso where
   [isIso_of_closure_interior_of_isCompl ⦃X U V : TopPair.{u}ᵒᵖ⦄ (f : X ⟶ U) (g : X ⟶ V)
       (hf : IsEmbedding f.unop) (hg : IsEmbedding g.unop) (hcompl : TopPair.IsCompl f.unop g.unop)
@@ -740,11 +736,13 @@ set_option backward.isDefEq.respectTransparency false in
 `⋯ ⟶ H (c.next i) X.fst ⟶ Hₚ (c.next i) X) ⟶ H i X.snd ⟶ H i X.fst ⟶ ⋯`. -/
 class HasPairSequence (HP : CohomologyPretheory.{u} C c) where
   exact_pair (HP) (X : TopPair.{u}ᵒᵖ) (i j) (hij : c.Rel i j) :
-      (ComposableArrows.mk₂ ((HP.δ i j).app _) ((HP.Hₚ j).map ((inclFst X.unop).op))).Exact := by cat_disch
+      (ComposableArrows.mk₂ ((HP.δ i j).app _) ((HP.Hₚ j).map ((inclFst X.unop).op))).Exact :=
+    by cat_disch
   exact_snd (HP) (X : TopPair.{u}ᵒᵖ) (i j) (hij : c.Rel i j) :
       (ComposableArrows.mk₂ ((HP.H i).map (X.unop.map.op)) ((HP.δ i j).app X)).Exact := by cat_disch
   exact_fst (HP) (X : TopPair.{u}ᵒᵖ) (i) :
-      (ComposableArrows.mk₂ ((HP.Hₚ i).map (X.unop.inclFst.op) ≫ (HP.iso i).inv.app (op X.unop.fst)) ((HP.H i).map (X.unop.map.op))).Exact := by cat_disch
+      (ComposableArrows.mk₂ ((HP.Hₚ i).map (X.unop.inclFst.op) ≫ (HP.iso i).inv.app (op X.unop.fst))
+        ((HP.H i).map (X.unop.map.op))).Exact := by cat_disch
 
 export HasPairSequence (exact_pair exact_snd exact_fst)
 
@@ -788,12 +786,13 @@ instance : IsClosedUnderIsomorphisms (hasPairSequence.{u} C c) where
             simp only [NatIso.trans_app, Iso.trans_hom, Iso.app_hom, Functor.isoWhiskerLeft_hom]
             erw [iso_homₚ_inv_hom_app]
             simp [pairSeq, pairSeq', ComposableArrows.Precomp.map])
-          (by simp [pairSeq, pairSeq', ComposableArrows.Precomp.map,-Functor.isoWhiskerLeft_trans, Hom.w_app])
+          (by simp [pairSeq, pairSeq', ComposableArrows.Precomp.map,-Functor.isoWhiskerLeft_trans,
+            Hom.w_app])
       exact ComposableArrows.exact_of_iso pairSeqIso (hPS.exact_snd _ _ _ hij)
     exact_fst X i := by
       let pairSeq :=
-        ComposableArrows.mk₂ ((HP.Hₚ i).map (X.unop.inclFst.op) ≫ (HP.iso i).inv.app (op X.unop.fst))
-          ((HP.H i).map (X.unop.map.op))
+        ComposableArrows.mk₂ ((HP.Hₚ i).map (X.unop.inclFst.op) ≫
+          (HP.iso i).inv.app (op X.unop.fst)) ((HP.H i).map (X.unop.map.op))
       let pairSeq' := ComposableArrows.mk₂
         ((HP'.Hₚ i).map (X.unop.inclFst.op) ≫ (HP'.iso i).inv.app (op X.unop.fst))
         ((HP'.H i).map (X.unop.map.op))
@@ -821,7 +820,8 @@ instance : IsClosedUnderIsomorphisms (hasPairSequence.{u} C c) where
 
 variable [HasPairSequence HP]
 
-lemma isZeroHₚDiagOfHasPairSequence (X : TopCat.{u}ᵒᵖ) : IsZero ((HP.Hₚ i).obj (diag.op.obj X)) := sorry
+lemma isZeroHₚDiagOfHasPairSequence (X : TopCat.{u}ᵒᵖ) : IsZero ((HP.Hₚ i).obj (diag.op.obj X)) :=
+  sorry
 
 end HasPairSequence
 
@@ -844,7 +844,8 @@ attribute [instance] IsExtraordinaryEilenbergSteenrod.isHomotopyInvariant
   IsExtraordinaryEilenbergSteenrod.hasPairSequence
 
 variable (C c) in
-/-- An abbreviation for `CohomologyPretheory.IsExtraordinaryEilenbergSteenrod` as `ObjectProperty`. -/
+/-- An abbreviation for `CohomologyPretheory.IsExtraordinaryEilenbergSteenrod` as `ObjectProperty`.
+-/
 abbrev isExtraordinaryEilenbergSteenrod : ObjectProperty (CohomologyPretheory.{u} C c) :=
   IsExtraordinaryEilenbergSteenrod
 
@@ -901,7 +902,8 @@ abbrev isEilenbergSteenrod : ObjectProperty (CohomologyPretheory.{u} C c) :=
 @[simp]
 lemma isEilenbergSteenrod_iff : isEilenbergSteenrod C HP ↔ HP.IsEilenbergSteenrod := .rfl
 
-instance : IsClosedUnderIsomorphisms (C := CohomologyPretheory C c) (isEilenbergSteenrod.{u} C) where
+instance :
+    IsClosedUnderIsomorphisms (C := CohomologyPretheory C c) (isEilenbergSteenrod.{u} C) where
   of_iso e h := {
     1 := instIsClosedUnderIsomorphismsIsExtraordinaryEilenbergSteenrod.of_iso e h.1
     hasDimensionAxiom :=
@@ -911,3 +913,4 @@ instance : IsClosedUnderIsomorphisms (C := CohomologyPretheory C c) (isEilenberg
 end CohomologyPretheory
 
 end TopPair
+#lint
