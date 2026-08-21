@@ -1,8 +1,30 @@
+/-
+Copyright (c) 2026 Jakob Scharmberg. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jakob Scharmberg
+-/
 module
 
 public import Mathlib
 public import Mathlib.Topology.VectorBundle.Category
 public import Mathlib.Topology.Category.Constructions
+
+/-!
+# Topological K-theory
+
+In this file, we construct the topological K-theory for a given coefficient field 𝕜. We first define
+the `0`th unreduced and reduced K-group. From this we can construct first all higher reduced
+K-groups and then higher unreduced K-groups. We also construct the reduced and unreduced boundary
+morphisms.
+
+Most significant gaps/`sorry`s:
+* Functoriality of the `0`th K-group
+* For a pair `(X, A)` with contractible `A`, the quotient projection induces an isomorphism in
+  reduced K-Groups.
+* The map `reducedK (SⁿX ∪ C(SⁿY)/C(SⁿY)) ⟶ reducedK (SⁿX ∪ C(SⁿY))` induced by the quotient map is
+  an isomorphism.
+* The map `SX ⟶ ΣX` induces an isomorphism in K-Groups.
+-/
 
 @[expose] public section
 
@@ -14,7 +36,7 @@ universe k u v e
 
 variable (𝕜 : Type k) [NontriviallyNormedField 𝕜] (n : ℕ)
 
-/-- The (0th) K-Group of a topological space is the Grothendieck group of the (isomorphism classes
+/-- The (`0`th) K-Group of a topological space is the Grothendieck group of the (isomorphism classes
 of) finite-rank vector bundles over it. -/
 noncomputable def KZero : TopCat.{u}ᵒᵖ ⥤ Ab where
   obj X := ⟨Algebra.GrothendieckAddGroup (Skeleton (FGFixedBaseVectorBundleCat.{k, u} 𝕜 X.unop))⟩
@@ -37,12 +59,10 @@ type of non-positive integers so this makes things easier. -/
 noncomputable def reducedK : TopCat.Pointed.{u}ᵒᵖ ⥤ Ab :=
   (TopCat.Pointed.suspension' n).op ⋙ reducedKZero 𝕜
 
-example (n : ℕ) : reducedK 𝕜 (n + 1) = (TopCat.Pointed.suspension' n).op ⋙ reducedK 𝕜 1 := rfl
-
 /-- For a pair `(X, A)` with contractible `A`, the quotient projection induces an isomorphism in
 reduced K-Groups. -/
 instance (Xₚ : TopPair.Pointed.{u}) [ContractibleSpace Xₚ.snd.carrier] :
-    IsIso ((reducedK 𝕜 0).map (op (TopCat.Pointed.quotient.out.app Xₚ))) := sorry -- TODO: data
+    IsIso ((reducedK 𝕜 0).map (op (TopCat.Pointed.quotient.out.app Xₚ))) := sorry
 
 /-- The `n`th relative K-Group is the `n`th reduced K-Group of the quotient of the pair. -/
 noncomputable abbrev Kₚ : TopPair.{u}ᵒᵖ ⥤ Ab :=
@@ -59,7 +79,8 @@ noncomputable def kIsoReducedKAdjoinPoint :
     Functor.isoWhiskerRight (NatIso.op quotient.inclIsoAdjoinPoint.symm) _
 
 /-- The map `SX ⟶ ΣX` induces an isomorphism in K-Groups. -/
-instance (X : TopCat.Pointed.{u}ᵒᵖ) : IsIso ((reducedK 𝕜 0).map (op (TopCat.Pointed.suspension.toReduced.app X.unop))) := sorry -- TODO: data
+instance (X : TopCat.Pointed.{u}ᵒᵖ) :
+    IsIso ((reducedK 𝕜 0).map (op (TopCat.Pointed.suspension.toReduced.app X.unop))) := sorry
 
 /-- A shim isomorphism `reducedK (n + 1) Y ≅ reducedK 0 (S(SⁿY))`. -/
 noncomputable def proj₂ReducedKIso :
@@ -73,8 +94,6 @@ noncomputable def proj₂ReducedKIso :
   (Functor.associator _ _ _).symm ≪≫ Functor.isoWhiskerRight ((Functor.opComp _ _).symm ≪≫
   NatIso.op (Functor.isoWhiskerRight (TopPair.Pointed.suspension.proj₂Iso' n) _ ≪≫
   Functor.associator _ _ _)) _ ≪≫ Functor.isoWhiskerLeft _ (Functor.leftUnitor _).symm
-
-example : reducedK 𝕜 (n + 1) = (TopCat.Pointed.suspension' n).op ⋙ (TopCat.Pointed.forget ⋙ TopCat.suspension).op ⋙ reducedK 𝕜 0 := rfl
 
 /-- For a pointed pair `(X, Y)`, this is the natural isomorphism
 `reducedK (n + 1) Y ≅ reducedK 0 (SⁿX ∪ C(SⁿY))/(SⁿX)`. -/
@@ -127,7 +146,7 @@ noncomputable def suspensionConePairQuotientOutReducedK :
       TopCat.Pointed.quotient.out))
     _
 
-instance : IsIso (suspensionConePairQuotientOutReducedK 𝕜 n) := sorry -- TODO: data
+instance : IsIso (suspensionConePairQuotientOutReducedK 𝕜 n) := sorry
 
 /-- The natural isomorphism `reducedK 0 (SⁿX ∪ C(SⁿY)/C(SⁿY)) ≅ reducedK 0 SⁿX/SⁿY`. -/
 noncomputable def suspensionConePairQuotientReducedKIso :

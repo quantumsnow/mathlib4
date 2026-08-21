@@ -54,7 +54,7 @@ abbrev of {A X : TopCat.{u}} (f : A ⟶ X) (h : Topology.IsEmbedding f) : TopPai
 abbrev ofSubset {X : TopCat.{u}} (A : Set X) : TopPair.{u} := TopPair.of (A := (TopCat.of A))
   (X := X) (TopCat.ofHom { toFun := Subtype.val }) Topology.IsEmbedding.subtypeVal
 
-def ofSubsetRangeIso (Xₚ : TopPair.{u}) : ofSubset (Set.range Xₚ.map) ≅ Xₚ := sorry
+-- def ofSubsetRangeIso (Xₚ : TopPair.{u}) : ofSubset (Set.range Xₚ.map) ≅ Xₚ := sorry
 
 /-- Constructs the topological pair `(X, ∅)` from `X : TopCat`. -/
 abbrev ofTopCat (X : TopCat.{u}) : TopPair.{u} :=
@@ -70,13 +70,15 @@ variable {X Y Z : TopPair.{u}}
 abbrev Hom.fst (f : X ⟶ Y) : X.fst ⟶ Y.fst := f.hom.right
 
 @[simp]
-lemma Hom.fst_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.fst (ofHom f g) = f := rfl
+lemma Hom.fst_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd)
+    (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.fst (ofHom f g) = f := rfl
 
 /-- The map between the second spaces -/
 abbrev Hom.snd (f : X ⟶ Y) : X.snd ⟶ Y.snd := f.hom.left
 
 @[simp]
-lemma Hom.snd_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd) (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.snd (ofHom f g) = g := rfl
+lemma Hom.snd_ofHom (f : X.fst ⟶ Y.fst) (g : X.snd ⟶ Y.snd)
+    (w : g ≫ Y.map = X.map ≫ f := by cat_disch) : Hom.snd (ofHom f g) = g := rfl
 
 @[reassoc, elementwise]
 lemma Hom.w {X Y : TopPair.{u}} (f : X ⟶ Y) :
