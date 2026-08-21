@@ -94,8 +94,8 @@ instance : IsIso (hSphereZeroToHPUnitBiprod HP n) :=
     ⟨(BinaryBiproduct.isColimit _ _)⟩
 
 /-- For `n ≠ 0`, `H n (𝕊 0)` is trivial. -/
-def isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
-  IsZero.of_iso ((CategoryTheory.Limits.biprod_isZero_iff _ _).mpr
+lemma isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
+  IsZero.of_iso ((biprod_isZero_iff _ _).mpr
     ⟨(HP.isZero_PUnit_of_gt_zero _), (HP.isZero_PUnit_of_gt_zero _)⟩)
     (asIso (hSphereZeroToHPUnitBiprod _ _))
 
