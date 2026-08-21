@@ -150,6 +150,23 @@ lemma toPrefunctor_injective {F G : C ⥤ D} (h : F.toPrefunctor = G.toPrefuncto
   obtain rfl : @map = @map' := by simpa [Functor.toPrefunctor] using h
   rfl
 
+/-- The `n`-fold precomposition of an endofunctor. -/
+@[simp]
+def iteratePrecomp (F : C ⥤ C) : (n : ℕ) → C ⥤ C
+  | 0 => 𝟭 _
+  | n + 1 => F ⋙ Functor.iteratePrecomp F n
+
+/-- The `n`-fold postcomposition of an endofunctor. -/
+@[simp]
+def iteratePostcomp (F : C ⥤ C) : (n : ℕ) → C ⥤ C
+  | 0 => 𝟭 _
+  | n + 1 => Functor.iteratePostcomp F n ⋙ F
+
+/-- An `n`th power of an endofunctor is its `n`-fold precomposition with itself. -/
+@[simps]
+instance : Pow (C ⥤ C) ℕ where
+  pow := iteratePrecomp
+
 end
 
 end Functor
