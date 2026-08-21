@@ -32,10 +32,16 @@ noncomputable def disk (n : ℕ) : TopCat.{u} :=
 noncomputable def diskBoundary (n : ℕ) : TopCat.{u} :=
   TopCat.of <| ULift <| Metric.sphere (0 : EuclideanSpace ℝ (Fin n)) 1
 
+noncomputable def puncturedDisk (n : ℕ) : TopCat.{u} :=
+  TopCat.of <| ULift <| Metric.puncturedClosedBall (0 : EuclideanSpace ℝ (Fin n)) 1
+
 /-- The `n`-sphere is the set of points in ℝⁿ⁺¹ whose norm equals `1`,
 endowed with the subspace topology. -/
 noncomputable def sphere (n : ℕ) : TopCat.{u} :=
   diskBoundary (n + 1)
+
+noncomputable def southernPuncturedSphere (n : ℕ) : TopCat.{u} :=
+  TopCat.of <| ULift <| { y : EuclideanSpace ℝ (Fin (n + 1)) | dist y 0 = 1 ∧ y ⟨n, by lia⟩ ≠ -1 }
 
 /-- The `n`-ball is the set of points in ℝⁿ whose norm is strictly less than `1`,
 endowed with the subspace topology. -/
@@ -45,11 +51,16 @@ noncomputable def ball (n : ℕ) : TopCat.{u} :=
 /-- `𝔻 n` denotes the `n`-disk. -/
 scoped prefix:arg "𝔻 " => disk
 
+scoped prefix:arg "𝔻* " => puncturedDisk
+
 /-- `∂𝔻 n` denotes the boundary of the `n`-disk. -/
 scoped prefix:arg "∂𝔻 " => diskBoundary
 
 /-- `𝕊 n` denotes the `n`-sphere. -/
 scoped prefix:arg "𝕊 " => sphere
+
+/-- `𝕊* n` denotes the `n`-sphere punctured at the southpole. -/
+scoped prefix:arg "𝕊* " => southernPuncturedSphere
 
 /-- `𝔹 n` denotes the `n`-ball, the interior of the `n`-disk. -/
 scoped prefix:arg "𝔹 " => ball
@@ -70,11 +81,33 @@ def ballInclusion (n : ℕ) : 𝔹 n ⟶ 𝔻 n :=
         rw [isOpen_induced_iff, ← hst, ← hrs]
         tauto⟩ }
 
+def diskCenterInclusion (n : ℕ) : of PUnit ⟶ 𝔻 n :=
+  ofHom (ContinuousMap.const _ ⟨0, by simp⟩)
+
+noncomputable def southpoleInclusion : (n : ℕ) → of PUnit ⟶ 𝕊 n -- TODO: do this without lift first
+  | 0 => ofHom (ContinuousMap.const _ ⟨!₂[-1], by simp; sorry⟩)
+  | n + 1 => sorry
+
+/-- The inclusion of the disk into the sphere as the southern hemisphere. -/
+def diskInclusionSphere (n : ℕ) : 𝔻 n ⟶ 𝕊 n := sorry
+
+/-- The inclusion of the punctured disk into the (southern) punctured sphere as the southern hemisphere. -/
+def puncturedDiskInclusionPuncturedSphere (n : ℕ) : 𝔻* n ⟶ 𝕊* n := sorry
+
+def southernPuncturedSphereInclusionSphere (n : ℕ) : 𝕊* n ⟶ 𝕊 n := sorry
+
 set_option backward.isDefEq.respectTransparency false in
 instance {n : ℕ} : Mono (diskBoundaryInclusion n) := mono_iff_injective _ |>.mpr <| by
   intro ⟨x, hx⟩ ⟨y, hy⟩ h
   obtain rfl : x = y := by simpa [diskBoundaryInclusion, disk] using h
   congr
+
+set_option backward.isDefEq.respectTransparency false in
+lemma isEmbedding_diskBoundaryInclusion (n : ℕ) : Topology.IsEmbedding (diskBoundaryInclusion n) where
+  toIsInducing := sorry
+  injective := (TopCat.mono_iff_injective _).mp inferInstance
+
+lemma isEmbedding_southernPuncturedSphereInclusionSphere (n : ℕ) : Topology.IsEmbedding (southernPuncturedSphereInclusionSphere n) := sorry
 
 set_option backward.isDefEq.respectTransparency false in
 instance {n : ℕ} : Mono (ballInclusion n) := TopCat.mono_iff_injective _ |>.mpr <| by

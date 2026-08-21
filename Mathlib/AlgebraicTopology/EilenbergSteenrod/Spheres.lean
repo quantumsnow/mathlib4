@@ -10,6 +10,30 @@ public import Mathlib.Topology.Category.TopCat.Sphere
 public import Mathlib.CategoryTheory.Functor.Basic
 public import Mathlib.AlgebraicTopology.EilenbergSteenrod
 
+/-!
+# Homology of spheres
+
+This file contains a computation of the homology of spheres from the Eilenberg-Steenrod axioms. It
+still contains a number of `sorry`s.
+
+The strategy is to compute the 0-homology of `𝕊 0`, from that compute the reduced homology of all
+spheres, and finally compute the unreduced homology.
+
+Most significant gaps/`sorry`s:
+* `isColimitSphereZero`: show that `𝕊 0` is a coproduct
+* show that the map `reducedH m (𝕊 n) ⟶ H m (𝕊 n, 𝔻 n)` (`reducedHSphereToHₚSphereDiskPair`) is an
+  iso
+* `puncturedSphereDiskPairToSphereDiskPair`: construct this embedding `(𝕊* n, 𝔻* n) ⟶ (𝕊 n, 𝔻 n)`
+* `puncturedSphereDiskPairHomotopyEquiv`: construct this homotopy equivalence
+  `((𝕊* (n + 1)), (𝔻* (n + 1))) ≃ₕ (𝔻 (n + 1), 𝕊 n)`
+* show that the reduced boundary map `H (m + 1) (𝔻 (n + 1), 𝕊 n) ⟶ reducedH m (𝕊 n)`
+  (`hₚDiskSpherePairToReducedHSphere`) is an iso
+* `isZero_reducedHSphere_of'` and `isZero_reducedHSphere_of''`: show that `reducedH 0 (𝕊 k)` and
+  `reducedH k (𝕊 0)` are trivial
+* `reducedHSphereToCoeffObj`: construct the map `reducedH 0 (𝕊 0) ⟶ coeffObj` and show that it is an
+  isomorphism
+-/
+
 @[expose] public section
 
 open CategoryTheory TopCat TopPair Limits HomologyPretheory
@@ -18,177 +42,237 @@ namespace EilenbergSteenrod.Spheres
 
 universe u v
 
-variable (HP : HomologyPretheory.{u} Ab.{v} (ComplexShape.down ℕ)) [IsEilenbergSteenrod HP] (m n : ℕ)
+variable (HP : HomologyPretheory.{u} Ab.{v} (ComplexShape.down ℕ)) [IsEilenbergSteenrod HP]
+  (m n k : ℕ)
 
-def isEmbeddingDiskBoundaryInclusion (n : ℕ) : Topology.IsEmbedding (diskBoundaryInclusion n) where
-  1 := sorry
-  injective := (TopCat.mono_iff_injective _).mp inferInstance
+/-- The inclusion of 1 into `𝕊 0`. -/
+def ptInclSphereZeroPos : of PUnit ⟶ 𝕊 0 :=
+  ofHom (ContinuousMap.const _ (ULift.up ⟨!₂[1], sorry⟩))
 
-noncomputable abbrev diskSpherePair (n : ℕ) :=
-  TopPair.of (diskBoundaryInclusion.{u} n) (isEmbeddingDiskBoundaryInclusion.{u} n)
+/-- The inclusion of -1 into `𝕊 0`. -/
+def ptInclSphereZeroNeg : of PUnit ⟶ 𝕊 0 :=
+  ofHom (ContinuousMap.const _ (ULift.up ⟨!₂[-1], sorry⟩))
 
-def sphereDiskHemisphereInclusion (n : ℕ) : 𝔻 n ⟶ 𝕊 n := sorry
+/-- The coproduct cofan of `𝕊 0`. -/
+noncomputable def sphereZeroCofan := BinaryCofan.mk ptInclSphereZeroPos.{u} ptInclSphereZeroNeg
 
-noncomputable abbrev sphereDiskPair (n : ℕ) := TopPair.of (sphereDiskHemisphereInclusion n) sorry
+/-- The coproduct cofan of `𝕊 0` is a colimit. -/
+def isColimitSphereZero : IsColimit sphereZeroCofan := sorry
 
-def ptInclSphereZeroPos : TopCat.of PUnit ⟶ 𝕊 0 :=
-  ofHom {toFun := fun x ↦ ULift.up ⟨!₂[1], by simp; sorry⟩}
+/-- The image of the coproduct cofan of `𝕊 0` under homology. -/
+noncomputable def hSphereZeroCocone :
+    Cocone (pair (of PUnit) (of PUnit) ⋙ HP.H n) :=
+  (HP.H _).mapCocone sphereZeroCofan
 
-def ptInclSphereZeroNeg : TopCat.of PUnit ⟶ 𝕊 0 :=
-  ofHom {toFun := fun x ↦ ULift.up ⟨!₂[-1], by simp; sorry⟩}
+/-- The image of the coproduct cofan of `𝕊 0` under homology is a colimit. -/
+noncomputable def isColimitHSphereZeroCocone :
+    IsColimit (hSphereZeroCocone HP n) :=
+  ((IsAdditive.preserves_coproducts_of_small _ _ _).preservesColimit.preserves
+    isColimitSphereZero).some
 
-noncomputable abbrev sphereZeroCofan := BinaryCofan.mk ptInclSphereZeroPos.{u} ptInclSphereZeroNeg
+/-- The image of the coproduct cofan of `𝕊 0` under `n`th homology as a cofan on `H n ∗`. -/
+noncomputable def hSphereZeroCofan :
+    BinaryCofan ((HP.H n).obj (TopCat.of PUnit)) ((HP.H n).obj (TopCat.of PUnit)) :=
+  (Cocone.precomposeEquivalence (pairComp (of PUnit) (of PUnit) (HP.H _))).functor.obj
+    ((HP.H _).mapCocone sphereZeroCofan)
 
-def isColimit_sphereZeroCofan : IsColimit sphereZeroCofan.{u} := sorry
+/-- The image of the coproduct cofan of `𝕊 0` under `n`th homology as a cofan on `H n ∗` is a
+colimit. -/
+noncomputable def isColimitHZeroSphereZeroCofan :
+    IsColimit (hSphereZeroCofan HP n) :=
+  IsColimit.equivOfNatIsoOfIso _ _ _ (Iso.refl _) (isColimitHSphereZeroCocone HP n)
 
-noncomputable def isColimit_HZeroSphereZero : IsColimit ((HP.H 0).mapCocone sphereZeroCofan) :=
-  (((IsAdditive.preserves_coproducts_of_small HP WalkingPair 0).preservesColimit).preserves
-    isColimit_sphereZeroCofan).some
+/-- The universal map `H n (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` induced by the coproduct
+`H 0 (𝕊 0)`. -/
+noncomputable def hSphereZeroToHPUnitBiprod :
+    (HP.H n).obj (𝕊 0) ⟶ ((HP.H n).obj (TopCat.of PUnit)) ⊞ ((HP.H n).obj (TopCat.of PUnit)) :=
+  (isColimitHZeroSphereZeroCofan _ _).desc (BinaryBiproduct.bicone _ _).toCocone
 
-noncomputable abbrev HZeroSphereZeroCofan' := (Cocone.precomposeEquivalence (pairComp (of PUnit)
-  (of PUnit) (HP.H 0))).functor.obj ((HP.H 0).mapCocone sphereZeroCofan)
+/-- The universal map `H 0 (𝕊 0) ⟶ H n ∗ ⊞ H n ∗` is an isomorphism. -/
+instance : IsIso (hSphereZeroToHPUnitBiprod HP n) :=
+  (isColimitHZeroSphereZeroCofan _ _).nonempty_isColimit_iff_isIso_desc.mp
+    ⟨(BinaryBiproduct.isColimit _ _)⟩
 
-noncomputable abbrev isColimit_HZeroSphereZero' := (IsColimit.equivOfNatIsoOfIso (pairComp
-  (of PUnit) (of PUnit) (HP.H 0)) ((HP.H 0).mapCocone sphereZeroCofan) (HZeroSphereZeroCofan' HP)
-  (Iso.refl _) (isColimit_HZeroSphereZero HP))
+/-- For `n ≠ 0`, `H n (𝕊 0)` is trivial. -/
+lemma isZero_hSphereZero_of [NeZero n] : IsZero ((HP.H n).obj (𝕊 0)) :=
+  IsZero.of_iso ((biprod_isZero_iff _ _).mpr
+    ⟨(HP.isZero_PUnit_of_gt_zero _), (HP.isZero_PUnit_of_gt_zero _)⟩)
+    (asIso (hSphereZeroToHPUnitBiprod _ _))
 
-noncomputable def hZeroSphereZeroToCoeffGroupBiprod :
-    (HP.H 0).obj (𝕊 0) ⟶ (HP.coeffGroup) ⊞ (HP.coeffGroup) :=
-  (isColimit_HZeroSphereZero' HP).desc
-    (BinaryBiproduct.bicone (HP.coeffGroup) (HP.coeffGroup)).toCocone
+section Reduced
 
-instance : IsIso (hZeroSphereZeroToCoeffGroupBiprod HP) :=
-  (isColimit_HZeroSphereZero' HP).nonempty_isColimit_iff_isIso_desc.mp
-    ⟨(BinaryBiproduct.isColimit (HP.coeffGroup) (HP.coeffGroup))⟩
+/-- The pair `(𝕊 n, 𝔻 n)` (southern hemisphere). -/
+noncomputable abbrev sphereDiskPair := TopPair.of (diskInclusionSphere n) sorry
 
-namespace Reduced
+/-- The pair of punctured sphere and disk `(𝕊* n, 𝔻* n)` (southern hemisphere). -/
+noncomputable abbrev puncturedSphereDiskPair :=
+  TopPair.of (puncturedDiskInclusionPuncturedSphere n) sorry
 
-noncomputable abbrev hZeroSphereZeroToCoeffGroup := hToHPUnit HP 0 (𝕊 0)
+/-- The pair `(𝔻 (n + 1), 𝕊 n)`. -/
+noncomputable abbrev diskSpherePair :=
+  TopPair.of (diskBoundaryInclusion (n + 1)) (isEmbedding_diskBoundaryInclusion _)
 
-/-- The canonical map `reducedHₘ(Sⁿ) ⟶ Hₘ(Sⁿ, Dⁿ)` -/
+/-- The canonical map `reducedH m (𝕊 n) ⟶ H m (𝕊 n, 𝔻 n)`. -/
 noncomputable def reducedHSphereToHₚSphereDiskPair :
     (HP.reducedH m).obj (𝕊 n) ⟶ (HP.Hₚ m).obj (sphereDiskPair n) :=
   kernel.ι _ ≫ (HP.iso _).hom.app _ ≫ (HP.Hₚ _).map (sphereDiskPair _).j
 
+/-- The canonical map `reducedH m (𝕊 n) ⟶ H m (𝕊 n, 𝔻 n)` is an isomorphism. -/
 instance : IsIso (reducedHSphereToHₚSphereDiskPair HP m n) := sorry
 
-/-- The composition `Hₘ(Sⁿ, Dⁿ) ⟶ Hₘ(Sⁿ\pt, Dⁿ\pt) ⟶ Hₘ(Dⁿ, Sⁿ⁻¹)`. -/
-def hₚSphereDiskPairToHₚDiskSpherePair :
-    (HP.Hₚ m).obj (sphereDiskPair n) ⟶ (HP.Hₚ m).obj (diskSpherePair n) := sorry
+/-- The inclusion `(𝕊* n, 𝔻* n) ⟶ (𝕊 n, 𝔻 n)`. -/
+def puncturedSphereDiskPairToSphereDiskPair : puncturedSphereDiskPair n ⟶ sphereDiskPair n := sorry
 
-instance : IsIso (hₚSphereDiskPairToHₚDiskSpherePair HP m n) := sorry
+lemma isEmbedding_puncturedSphereDiskPairToSphereDiskPair :
+    IsEmbedding (puncturedSphereDiskPairToSphereDiskPair n) := sorry
 
-/-- The canonical map `Hₘ₊₁(Dⁿ⁺¹, Sⁿ) ⟶ reducedHₘ(Sⁿ)`. -/
+/-- The southpole pair inclusion `(∗, ∗) ⟶ (𝕊 n, 𝔻 n)`. -/
+noncomputable def diagPUnitToSphereDiskPair :
+    diag.obj (of PUnit) ⟶ sphereDiskPair n :=
+  TopPair.ofHom (southpoleInclusion n) (diskCenterInclusion n) sorry
+
+lemma isEmbedding_diagPtToSphereDiskPair : IsEmbedding (diagPUnitToSphereDiskPair n) := sorry
+
+lemma isCompl_diagPtToSphereDiskPair :
+    TopPair.IsCompl (diagPUnitToSphereDiskPair n) (puncturedSphereDiskPairToSphereDiskPair n) :=
+  sorry
+
+/-- The inclusion `(𝕊* n, 𝔻* n) ⟶ (𝕊 n, 𝔻 n)` induces an isomorphism in homology. -/
+instance : IsIso ((HP.Hₚ m).map (puncturedSphereDiskPairToSphereDiskPair n)) :=
+  HP.isIso_of_closure_interior_of_isCompl (diagPUnitToSphereDiskPair _)
+    (puncturedSphereDiskPairToSphereDiskPair _) (isEmbedding_diagPtToSphereDiskPair _)
+    (isEmbedding_puncturedSphereDiskPairToSphereDiskPair _) (isCompl_diagPtToSphereDiskPair _) sorry
+    _
+
+/-- The homotopy equivalence `((𝕊* (n + 1)), (𝔻* (n + 1))) ≃ₕ (𝔻 (n + 1), 𝕊 n)`. -/
+def puncturedSphereDiskPairHomotopyEquiv :
+    puncturedSphereDiskPair (n + 1) ≃ₕ diskSpherePair n := sorry
+
+/-- The boundary map `H (m + 1) (𝔻 (n + 1), 𝕊 n) ⟶ reducedH m (𝕊 n)`. -/
 noncomputable abbrev hₚDiskSpherePairToReducedHSphere :
-    (HP.Hₚ (m + 1)).obj (diskSpherePair (n + 1)) ⟶ (HP.reducedH m).obj (𝕊 n) :=
-  reducedδ.app' HP (m + 1) m (diskSpherePair (n + 1))
+    (HP.Hₚ (m + 1)).obj (diskSpherePair n) ⟶ (HP.reducedH m).obj (𝕊 n) :=
+  (reducedδ _ _ _).app _
 
+/-- The boundary map `H (m + 1) (𝔻 (n + 1), 𝕊 n) ⟶ reducedH m (𝕊 n)` is an isomorphism. -/
 instance : IsIso (hₚDiskSpherePairToReducedHSphere HP m n) := sorry
 
-noncomputable def reducedHSuccSphereSuccToReducedHSphere :=
-  reducedHSphereToHₚSphereDiskPair HP (m + 1) (n + 1) ≫
-    hₚSphereDiskPairToHₚDiskSpherePair HP (m + 1) (n + 1) ≫
-    hₚDiskSpherePairToReducedHSphere HP m n
+/-- The map `reducedH (m + 1) (𝕊 (n + 1)) ⟶ reducedH m (𝕊 n)`. -/
+noncomputable def reducedHSuccSphereSuccToReducedHSphere :
+    (HP.reducedH (m + 1)).obj 𝕊 (n + 1) ⟶ (HP.reducedH m).obj (𝕊 n) :=
+  reducedHSphereToHₚSphereDiskPair _ _ _ ≫
+  (asIso ((HP.Hₚ _).map (puncturedSphereDiskPairToSphereDiskPair _))).inv ≫
+  (IsHomotopyInvariant.hₚIsoOfHomotopyEquiv _ _ (puncturedSphereDiskPairHomotopyEquiv n)).hom ≫
+  hₚDiskSpherePairToReducedHSphere _ _ _
 
+/-- The map `reducedH (m + 1) (𝕊 (n + 1)) ⟶ reducedH m (𝕊 n)` is an isomorphism. -/
 instance : IsIso (reducedHSuccSphereSuccToReducedHSphere HP m n) := by
   unfold reducedHSuccSphereSuccToReducedHSphere
   infer_instance
 
---TODO: can use `match` to avoid explicit `(m : ℕ) →` notation?
+/-- The map `reducedH m (𝕊 (k + m)) ⟶ reducedH 0 (𝕊 k)`. -/
 noncomputable def reducedHSphereToReducedHZeroSphere :
-    (k : ℕ) → (HP.reducedH k).obj (𝕊 (n + k)) ⟶ (HP.reducedH 0).obj (𝕊 n)
+    (m : ℕ) → (HP.reducedH m).obj (𝕊 (k + m)) ⟶ (HP.reducedH 0).obj (𝕊 k)
   | 0 => 𝟙 _
-  | k + 1 => reducedHSuccSphereSuccToReducedHSphere HP k (n + k) ≫
-      reducedHSphereToReducedHZeroSphere k
+  | _ + 1 => reducedHSuccSphereSuccToReducedHSphere _ _ _ ≫
+      reducedHSphereToReducedHZeroSphere _
 
-instance : (k : ℕ) → IsIso (reducedHSphereToReducedHZeroSphere HP n k)
+/-- The map `reducedH m (𝕊 (k + m)) ⟶ reducedH 0 (𝕊 k)` is an isomorphism. -/
+instance : (m : ℕ) → IsIso (reducedHSphereToReducedHZeroSphere HP k m)
   | 0 => by
       unfold reducedHSphereToReducedHZeroSphere
       infer_instance
-  | k + 1 => by
+  | m + 1 => by
       unfold reducedHSphereToReducedHZeroSphere
-      have : IsIso (reducedHSphereToReducedHZeroSphere HP n k) :=
-        instIsIsoAbReducedHSphereToReducedHZeroSphere k
+      have : IsIso (reducedHSphereToReducedHZeroSphere _ _ m) :=
+        instIsIsoAbReducedHSphereToReducedHZeroSphere _
       infer_instance
 
-def isZero_reducedHSphere_of' [NeZero n] : (k : ℕ) → IsZero ((HP.reducedH k).obj (𝕊 (n + k)))
-  | 0 => by
-      have : IsZero ((HP.H 0).obj (𝕊 n)) := sorry
-      have := IsZero.mono this ((HP.H 0).map (isTerminalPUnit.from (𝕊 n)))
-      exact isZero_kernel_of_mono ((HP.H 0).map (isTerminalPUnit.from (𝕊 n)))
-  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of' 0)
-      (asIso (reducedHSphereToReducedHZeroSphere HP n (k + 1)))
+/-- For `k ≠ 0`, `reducedH m (𝕊 (k + m))` is trivial. -/
+lemma isZero_reducedHSphere_of' [NeZero k] : (m : ℕ) → IsZero ((HP.reducedH m).obj (𝕊 (k + m)))
+  | 0 => sorry
+  | _ + 1 => IsZero.of_iso (isZero_reducedHSphere_of' _)
+      (asIso (reducedHSphereToReducedHZeroSphere _ _ _))
 
+/-- The map `reducedH (k + n) (𝕊 n) ⟶ reducedH m (𝕊 0)`. -/
 noncomputable def reducedHSphereToReducedHSphereZero :
-    (k : ℕ) → (HP.reducedH (m + k)).obj (𝕊 k) ⟶ (HP.reducedH m).obj (𝕊 0)
+    (n : ℕ) → (HP.reducedH (k + n)).obj (𝕊 n) ⟶ (HP.reducedH k).obj (𝕊 0)
   | 0 => 𝟙 _
-  | k + 1 => reducedHSuccSphereSuccToReducedHSphere HP (m + k) k ≫
-      reducedHSphereToReducedHSphereZero k
+  | _ + 1 => reducedHSuccSphereSuccToReducedHSphere _ _ _ ≫
+      reducedHSphereToReducedHSphereZero _
 
-instance : (k : ℕ) → IsIso (reducedHSphereToReducedHSphereZero HP m k)
+/-- The map `reducedH (k + n) (𝕊 n) ⟶ reducedH m (𝕊 0)` is an isomorphism. -/
+instance : (n : ℕ) → IsIso (reducedHSphereToReducedHSphereZero HP k n)
   | 0 => by
       unfold reducedHSphereToReducedHSphereZero
       infer_instance
-  | k + 1 => by
+  | n + 1 => by
       unfold reducedHSphereToReducedHSphereZero
-      have : IsIso (reducedHSphereToReducedHSphereZero HP m k) :=
-        instIsIsoAbReducedHSphereToReducedHSphereZero k
+      have : IsIso (reducedHSphereToReducedHSphereZero _ _ n) :=
+        instIsIsoAbReducedHSphereToReducedHSphereZero _
       infer_instance
 
-def isZero_reducedHSphere_of'' [NeZero m] : (k : ℕ) → IsZero ((HP.reducedH (m + k)).obj (𝕊 k))
-  | 0 => by
-      have : IsZero ((HP.H m).obj (𝕊 0)) := sorry
-      have := IsZero.mono this ((HP.H m).map (isTerminalPUnit.from (𝕊 0)))
-      exact isZero_kernel_of_mono ((HP.H m).map (isTerminalPUnit.from (𝕊 0)))
-  | k + 1 => IsZero.of_iso (isZero_reducedHSphere_of'' 0)
-      (asIso (reducedHSphereToReducedHSphereZero HP m (k + 1)))
+/-- For `k ≠ 0`, `reducedH (k + n) (𝕊 n)` is trivial. -/
+lemma isZero_reducedHSphere_of'' [NeZero k] : (n : ℕ) → IsZero ((HP.reducedH (k + n)).obj (𝕊 n))
+  | 0 =>
+      have : Mono (HP.hToHPUnit k (𝕊 0)) := IsZero.mono (isZero_hSphereZero_of _ _) _
+      isZero_kernel_of_mono _
+  | _ + 1 => IsZero.of_iso (isZero_reducedHSphere_of'' 0)
+      (asIso (reducedHSphereToReducedHSphereZero _ _ _))
 
---TODO: fold the proofs for the primed statements into this?
-def isZero_reducedHSphere_of {m n} (hmn : m ≠ n) : IsZero ((HP.reducedH m).obj (𝕊 n)) := by
+/-- For `m ≠ n`, `reducedH m (𝕊 n)` is trivial. -/
+lemma isZero_reducedHSphere_of {m n} (hmn : m ≠ n) : IsZero ((HP.reducedH m).obj (𝕊 n)) := by
   cases Nat.lt_or_gt.mp hmn
   case inl h =>
     have : n = n - m + m := by lia
     rw [this]
-    have : NeZero (n - m) := sorry
-    exact isZero_reducedHSphere_of' HP (n := n - m) m
+    have : NeZero (n - m) := ⟨by linarith⟩
+    exact isZero_reducedHSphere_of' _ (k := n - m) _
   case inr h =>
     have : m = m - n + n := by lia
     rw [this]
-    have : NeZero (m - n) := sorry
-    exact isZero_reducedHSphere_of'' HP (m := m - n) n
+    have : NeZero (m - n) := ⟨by linarith⟩
+    exact isZero_reducedHSphere_of'' _ (k := m - n) _
 
--- This definition has the disadvantage that `reducedHSphereToCoeffGroup HP n` is not DefEq to `reducedHSphereToReducedHSphereZero HP 0 n ≫ reducedHSphereToCoeffGroup HP 0` but not sure if this will be a problem yet
-noncomputable def reducedHSphereToCoeffGroup :
-    (n : ℕ) → (HP.reducedH n).obj (𝕊 n) ⟶ HP.coeffGroup
+/-- The map `reducedH n (𝕊 n) ⟶ coeffObj`. -/
+noncomputable def reducedHSphereToCoeffObj :
+    (n : ℕ) → (HP.reducedH n).obj (𝕊 n) ⟶ HP.coeffObj
   | 0 => sorry
-  | n + 1 => reducedHSuccSphereSuccToReducedHSphere HP n n ≫ reducedHSphereToCoeffGroup n
+  | _ + 1 => reducedHSuccSphereSuccToReducedHSphere _ _ _ ≫ reducedHSphereToCoeffObj _
 
-instance : (n : ℕ) → IsIso (reducedHSphereToCoeffGroup HP n)
+/-- The map `reducedH n (𝕊 n) ⟶ coeffObj` is an isomorphism. -/
+instance : (n : ℕ) → IsIso (reducedHSphereToCoeffObj HP n)
   | 0 => sorry
   | n + 1 => by
-      unfold reducedHSphereToCoeffGroup
-      have : IsIso (reducedHSphereToCoeffGroup HP n) := instIsIsoAbReducedHSphereToCoeffGroup n
+      unfold reducedHSphereToCoeffObj
+      have : IsIso (reducedHSphereToCoeffObj _ n) := instIsIsoAbReducedHSphereToCoeffObj _
       infer_instance
 
 end Reduced
 
-noncomputable def hZeroSphereToCoeffGroup [NeZero n] :
-    (HP.H 0).obj (𝕊 n) ⟶ HP.coeffGroup :=
-  (asIso (hToReducedHBiprod HP 0 (𝕊 n))).hom ≫
-    (isoZeroBiprod (Reduced.isZero_reducedHSphere_of' HP n 0)).inv
+/-- The map `H 0 (𝕊 n) ⟶ coeffObj` for `n ≠ 0`. -/
+noncomputable def hZeroSphereToCoeffObj [NeZero n] :
+    (HP.H 0).obj (𝕊 n) ⟶ HP.coeffObj :=
+  (hIsoReducedHBiprod HP 0 (𝕊 n)).hom ≫
+    (isoZeroBiprod (isZero_reducedHSphere_of' HP n 0)).inv
 
---TODO: is this needed if it can be inferred? If it is needed, should name this something more useful?
-instance [NeZero n] : IsIso (hZeroSphereToCoeffGroup HP n) := by
-  unfold hZeroSphereToCoeffGroup
+/-- The map `H 0 (𝕊 n) ⟶ coeffObj` is an isomorphism for `n ≠ 0`. -/
+instance [NeZero n] : IsIso (hZeroSphereToCoeffObj HP n) := by
+  unfold hZeroSphereToCoeffObj
   infer_instance
 
-noncomputable def hSphereToCoeffGroup [NeZero n] : (HP.H n).obj (𝕊 n) ⟶ HP.coeffGroup := (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ Reduced.reducedHSphereToCoeffGroup HP n
+/-- The map `H n (𝕊 n) ⟶ coeffObj`. -/
+noncomputable def hSphereToCoeffObj [NeZero n] :
+    (HP.H n).obj (𝕊 n) ⟶ HP.coeffObj :=
+  (asIso ((HP.reducedHToH n).app (𝕊 n))).inv ≫ reducedHSphereToCoeffObj HP n
 
---TODO: is this needed if it can be inferred? If it is needed, should name this something more useful?
-instance [NeZero n] : IsIso (hSphereToCoeffGroup HP n) := by
-  unfold hSphereToCoeffGroup
+/-- The map `H n (𝕊 n) ⟶ coeffObj` is an isomorphism. -/
+instance [NeZero n] : IsIso (hSphereToCoeffObj HP n) := by
+  unfold hSphereToCoeffObj
   infer_instance
 
-def isZero_HSphere_of [NeZero m] (hmn : m ≠ n) : IsZero ((HP.H m).obj (𝕊 n)) := IsZero.of_iso (Reduced.isZero_reducedHSphere_of HP hmn) (asIso ((HP.reducedHToH m).app (𝕊 n))).symm
+/-- For `m ≠ n`, `H m (𝕊 n)` is trivial. -/
+lemma isZero_HSphere_of [NeZero m] (hmn : m ≠ n) :
+    IsZero ((HP.H m).obj (𝕊 n)) :=
+  IsZero.of_iso (isZero_reducedHSphere_of _ hmn) (asIso ((reducedHToH _ _).app _)).symm
 
 end EilenbergSteenrod.Spheres

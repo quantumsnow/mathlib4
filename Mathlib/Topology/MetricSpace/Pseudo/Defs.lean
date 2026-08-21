@@ -425,6 +425,13 @@ theorem mem_closedBall' : y ∈ closedBall x ε ↔ dist x y ≤ ε := by rw [di
 theorem nonneg_of_mem_closedBall (hy : y ∈ closedBall x ε) : 0 ≤ ε :=
   dist_nonneg.trans hy
 
+/-- `puncturedClosedBall x ε` is the set of all points `y` with `0 < dist y x ≤ ε` -/
+def puncturedClosedBall (x : α) (ε : ℝ) :=
+  { y | 0 < dist y x ∧ dist y x ≤ ε }
+
+def puncturedClosedBallInclusion : C(puncturedClosedBall x ε, closedBall x ε) :=
+  ⟨fun x ↦ ⟨x, x.2.2⟩, by continuity⟩
+
 /-- `sphere x ε` is the set of all points `y` with `dist y x = ε` -/
 def sphere (x : α) (ε : ℝ) := { y | dist y x = ε }
 
